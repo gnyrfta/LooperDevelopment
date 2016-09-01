@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,12 +24,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Random;
 
 /**
  * Created by david on 2016-08-29.
  */
 public class MainActivity extends Activity {
     private String TAG = "MainActivity";
+    //These have to be at least accessible outside the scope of their methods, cause gonna have to mix them with each other.
+    public byte[] data;
+    public byte[] data2;
+    public byte[] data3;
+    public byte[] outputBuffer;
+    //constants needed for the streaming:
+    boolean m_stop = false; //Keep feeding data.
+    AudioTrack m_audioTrack; //Our audiotrack that we write to.
+    Thread audioTrackThread; //Our thread where we write to the AudioTrack.
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -39,6 +51,7 @@ public class MainActivity extends Activity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
+    //testAudio -> testAudio4 will not be used when trying to get STREAM to work.
     public void testAudio() throws IOException {
         int STREAM_MUSIC = 3;
         int ENCODING_PCM_16BIT = 2;
@@ -200,6 +213,18 @@ public class MainActivity extends Activity {
         }
     }
 
+    Runnable feedToBuffer = new Runnable()
+    {
+        @Override
+        public void run() {
+            Thread.currentThread().setPriority(Thread.MIN_PRIORITY);//Don't know what this does. But I guess its good.
+            //While we have not stopped the audio, feed the buffer data2 to output.
+            while(!m_stop)
+            {
+                m_audioTrack.write(outputBuffer,0,outputBuffer.length);//To register changes faster, try writing shorter parts at a time.
+            }
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -208,6 +233,9 @@ public class MainActivity extends Activity {
         Button b2 = (Button) findViewById(R.id.buttonTwo);
         Button b3 = (Button) findViewById(R.id.buttonThree);
         Button b4 = (Button) findViewById(R.id.buttonFour);
+        Button b5 = (Button) findViewById(R.id.buttonFive);
+        Button b6 = (Button) findViewById(R.id.buttonSix);
+        Button b7 = (Button) findViewById(R.id.buttonSeven);
         b1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
@@ -244,34 +272,39 @@ public class MainActivity extends Activity {
                 }
             }
         });
+        b5.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    startStreaming();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        b6.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    stopStreaming();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        b7.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                   // editBuffer();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
-
-   /* public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-        if (resultCode == RESULT_OK) {
-            Uri treeUri = resultData.getData();
-            DocumentFile pickedDir = DocumentFile.fromTreeUri(this, treeUri);
-
-            // List all existing files inside picked directory
-            for (DocumentFile file : pickedDir.listFiles()) {
-                Log.d(TAG, "Found file " + file.getName() + " with size " + file.length());
-            }
-
-            // Create a new file and write into it
-            DocumentFile newFile = pickedDir.createFile("text/plain", "My Novel");
-            try {
-                OutputStream out = getContentResolver().openOutputStream(newFile.getUri());
-                out.write("A long time ago...".getBytes());
-                out.close();
-            }catch (java.io.IOException e;)){throw e;}
-        }
-    }*/
-
 
     @Override
     public void onStart() {
         super.onStart();
-
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client.connect();
@@ -291,7 +324,6 @@ public class MainActivity extends Activity {
     @Override
     public void onStop() {
         super.onStop();
-
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         Action viewAction = Action.newAction(
@@ -307,5 +339,58 @@ public class MainActivity extends Activity {
         AppIndex.AppIndexApi.end(client, viewAction);
         client.disconnect();
         //
+    }
+    void startStreaming()
+    {
+        int STREAM_MUSIC = 3;
+        int ENCODING_PCM_16BIT = 2;
+        int CHANNEL_OUT_MONO = 4;
+        int MODE_STATIC = 0;
+        int MODE_STREAM = 1;
+        try
+        {
+            //Just doing all this to get the dataSize really (and feed to outputBuffer).
+            WavInfo wi = new WavInfo();
+            InputStream is = getResources().openRawResource(R.raw.beat1_mono);
+            int dataSize = wi.readHeader(is);
+            data2 = new byte[dataSize];
+            is.read(data2, 0, data2.length);
+            is.close();
+            outputBuffer = data2;
+            int frames = data2.length / 2; //2 bytes per frame.
+            m_stop = false;
+            m_audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT, dataSize,
+                    AudioTrack.MODE_STREAM);
+            m_audioTrack.play();
+            audioTrackThread = new Thread(feedToBuffer);
+            audioTrackThread.start();
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+    void stopStreaming()
+    {
+        m_stop = true;
+        m_audioTrack.stop();
+    }
+    //This should be called in onCreate.
+    boolean fillAllSixteenBuffers()
+    {
+        return true;
+    }
+    byte[] addBufferToMix(byte[] buffer)
+    {
+
+        byte[] returnBuffer = data2;//
+        return returnBuffer;
+    }
+    byte[] removeBufferFromMix(byte[] buffer)
+    {
+
+        byte[] returnBuffer = data2;//
+        return returnBuffer;
     }
 }

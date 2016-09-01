@@ -38,4 +38,26 @@
         android:layout_below="@id/buttonThree"
         android:text="Sound 1 and 2 premixed."
         android:id="@+id/buttonFour"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonFour"
+        android:text="Start streaming clip."
+        android:id="@+id/buttonFive"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonFive"
+        android:text="Stop streaming clip."
+        android:id="@+id/buttonSix"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonSix"
+        android:text="Does nothing."
+        android:id="@+id/buttonSeven"
+        />
+
 </RelativeLayout>
