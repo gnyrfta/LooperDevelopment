@@ -35,6 +35,13 @@ public class MainActivity extends Activity {
     public byte[] data;
     public byte[] data2;
     public byte[] data3;
+    //
+    public byte[] data7;//buffer for button seven.
+    public byte[] data8;//buffer for button eight.
+    public byte[] data9;//buffer for button nine.
+    public int dataSize7;
+    public int dataSize8;
+    public int dataSize9;
     public byte[] outputBuffer;
     //constants needed for the streaming:
     boolean m_stop = false; //Keep feeding data.
@@ -163,7 +170,7 @@ public class MainActivity extends Activity {
             WavWriter ww = new WavWriter();
             ww.setDataSize((long) dataSize);
             ww.setDataChunk(data3);
-            ww.writeToWav();
+            ww.writeToWav("awesome.wav");
             Log.d(TAG, "Exiting for-loop");
             Log.d(TAG, "Resmax = " + resMax + "");
             // AudioTrack at = new AudioTrack(STREAM_MUSIC,44100,CHANNEL_OUT_MONO,ENCODING_PCM_16BIT,dataSize,MODE_STATIC);
@@ -229,6 +236,11 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        try
+        {
+            fillAllBuffers();
+        }
+        catch (Exception e){}
         Button b1 = (Button) findViewById(R.id.buttonOne);
         Button b2 = (Button) findViewById(R.id.buttonTwo);
         Button b3 = (Button) findViewById(R.id.buttonThree);
@@ -236,6 +248,8 @@ public class MainActivity extends Activity {
         Button b5 = (Button) findViewById(R.id.buttonFive);
         Button b6 = (Button) findViewById(R.id.buttonSix);
         Button b7 = (Button) findViewById(R.id.buttonSeven);
+        Button b8 = (Button) findViewById(R.id.buttonEight);
+        Button b9 = (Button) findViewById(R.id.buttonNine);
         b1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
@@ -293,12 +307,31 @@ public class MainActivity extends Activity {
         b7.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                   // editBuffer();
+                    outputBuffer = addBufferToMix(data7,dataSize7,outputBuffer,"plusbuttonseven.wav");
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
         });
+        b8.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    outputBuffer=removeBufferFromMix(data9,dataSize9,outputBuffer,"minusbuttonnine.wav");
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        b9.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    outputBuffer = addBufferToMix(data9,dataSize9,outputBuffer,"plusbuttonnine.wav");
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        //Strange automatically added google stuff:
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
@@ -377,19 +410,145 @@ public class MainActivity extends Activity {
         m_audioTrack.stop();
     }
     //This should be called in onCreate.
-    boolean fillAllSixteenBuffers()
+    boolean fillAllBuffers() throws IOException
     {
+        Log.d(TAG+"fill","Entering fill all buffers");
+        int STREAM_MUSIC = 3;
+        int ENCODING_PCM_16BIT = 2;
+        int CHANNEL_OUT_MONO = 4;
+        int MODE_STATIC = 0;
+        int MODE_STREAM = 1;
+        try {
+            Log.d(TAG+"loading","Starting to load #7");
+            WavInfo wi = new WavInfo();
+            Log.d(TAG+"loading","Attempting to get resource");
+            InputStream is = getResources().openRawResource(R.raw.epic_brass);
+            Log.d(TAG+"loading","Got resource, attempting header");
+            dataSize7 = wi.readHeader(is);
+            Log.d(TAG+"loading","Read header, attempting to read resource to byte buffer.");
+            data7 = new byte[dataSize7];
+            is.read(data7, 0, data7.length);
+            is.close();
+            Log.d(TAG+"loading","Finished loading #7");
+            Log.d(TAG+"loading","Starting loading #8");
+            //
+            WavInfo wi2 = new WavInfo();
+            InputStream is2 = getResources().openRawResource(R.raw.beat2_mono);
+            dataSize8 = wi2.readHeader(is2);
+            data8 = new byte[dataSize8];
+            is2.read(data8, 0, data8.length);
+            is2.close();
+            Log.d(TAG+"loading","Starting loading #9");
+            //
+            WavInfo wi3 = new WavInfo();
+            InputStream is3 = getResources().openRawResource(R.raw.synth_bass);
+            dataSize9 = wi3.readHeader(is3);
+            data9 = new byte[dataSize9];
+            is3.read(data9, 0, data9.length);
+            is3.close();
+            Log.d(TAG+"loading","Finished loading all 3 files.");
+
+            //
+        } catch (IOException e) {
+            throw e;
+        }
+        Log.d(TAG+"fill","Exiting fill all buffers");
         return true;
     }
-    byte[] addBufferToMix(byte[] buffer)
+    byte[] addBufferToMix(byte[] buffer,int bufferSize,byte[] currentBuffer,String fileName)
     {
+        Log.d(TAG+"add","Entering addBufferToMix");
+        short resPrevious=0;
+        byte[] resultingBuffer = new byte[bufferSize];
 
-        byte[] returnBuffer = data2;//
-        return returnBuffer;
+        for (int i = 0; i < buffer.length; i += 2) {
+
+            short buf1a = currentBuffer[i + 1];
+            short buf2a = currentBuffer[i];
+            buf1a = (short) ((buf1a & 0xff) << 8);
+            buf2a = (short) (buf2a & 0xff);
+            short buf1b = buffer[i + 1];
+            short buf2b = buffer[i];
+            buf1b = (short) ((buf1b & 0xff) << 8);
+            buf2b = (short) (buf2b & 0xff);
+
+            short buf1c = (short) (buf1a + buf1b);
+            short buf2c = (short) (buf2a + buf2b);
+
+            short res = (short) (buf1c + buf2c);
+            float temp = (float)res;
+            float temp2 = temp/2;
+            res = (short)temp2;
+
+            if(res>10000) //Avoid 'normal' cases where amplitude shifts from f.ex. 4 to -2, which we want to keep.
+            {
+                if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
+                {
+                    Log.d(TAG,"res:"+res+"");
+                    res = resPrevious;
+                }
+            }
+            if(res<-10000)
+            {
+                if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
+                {
+                    res = resPrevious;
+                }
+            }
+            resPrevious=res;
+            resultingBuffer[i] = (byte) res;
+            resultingBuffer[i + 1] = (byte) (res >> 8);
+        }
+        WavWriter ww = new WavWriter();
+        ww.setDataSize((long) bufferSize);
+        ww.setDataChunk(resultingBuffer);
+        ww.writeToWav(fileName);
+        Log.d(TAG+"add","Exiting addBufferToMix");
+        return resultingBuffer;
     }
-    byte[] removeBufferFromMix(byte[] buffer)
+    byte[] removeBufferFromMix(byte[] buffer,int bufferSize,byte[] currentBuffer,String fileName)
     {
+        short resPrevious=0;
+        byte[] resultingBuffer = new byte[bufferSize];
+        for (int i = 0; i < buffer.length; i += 2) {
 
+            short buf1a = currentBuffer[i + 1];
+            short buf2a = currentBuffer[i];
+            buf1a = (short) ((buf1a & 0xff) << 8);
+            buf2a = (short) (buf2a & 0xff);
+            short buf1b = buffer[i + 1];
+            short buf2b = buffer[i];
+            buf1b = (short) ((buf1b & 0xff) << 8);
+            buf2b = (short) (buf2b & 0xff);
+
+            short buf1c = (short) (buf1a - buf1b);
+            short buf2c = (short) (buf2a - buf2b);
+
+            short res = (short) (buf1c + buf2c);
+
+            if(res>10000) //Avoid 'normal' cases where amplitude shifts from f.ex. 4 to -2, which we want to keep.
+            {
+                if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
+                {
+                    Log.d(TAG,"res:"+res+"");
+                    res = resPrevious;
+                }
+            }
+            if(res<-10000)
+            {
+                if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
+                {
+                    res = resPrevious;
+                }
+            }
+            resPrevious=res;
+            resultingBuffer[i] = (byte) res;
+            resultingBuffer[i + 1] = (byte) (res >> 8);
+        }
+        WavWriter ww = new WavWriter();
+        ww.setDataSize((long) bufferSize);
+        ww.setDataChunk(resultingBuffer);
+        ww.writeToWav(fileName);
         byte[] returnBuffer = data2;//
         return returnBuffer;
     }

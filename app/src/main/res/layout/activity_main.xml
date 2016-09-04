@@ -56,8 +56,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonSix"
-        android:text="Does nothing."
+        android:text="Adds buffer"
         android:id="@+id/buttonSeven"
         />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonSeven"
+        android:text="Removes below buffer"
+        android:id="@+id/buttonEight"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonEight"
+        android:text="Adds buffer"
+        android:id="@+id/buttonNine"
+        />
+
 
 </RelativeLayout>

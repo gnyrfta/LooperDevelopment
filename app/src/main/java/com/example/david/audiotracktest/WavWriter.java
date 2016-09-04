@@ -29,7 +29,7 @@ public class WavWriter {
     long myChunkSize=0;//set below
 
     byte[] data;
-    public boolean writeToWav()
+    public boolean writeToWav(String fileName)
     {
         try {
             Log.d(TAG,"entering writeToWav");
@@ -41,7 +41,7 @@ public class WavWriter {
             Log.d(TAG,"writable: "+writable);
             Log.d(TAG,"Creating streams and file");
             File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-            String fileName = "awesome.wav";
+           // String fileName = "testing.wav";
             File file = new File(sdCard,fileName);
             //file.createNewFile();
            // File file = new File(Environment.getExternalStoragePublicDirectory(
