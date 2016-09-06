@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -42,7 +43,9 @@ public class MainActivity extends Activity {
     public int dataSize7;
     public int dataSize8;
     public int dataSize9;
-    public byte[] outputBuffer;
+    public static volatile byte[] outputBuffer;
+    public static volatile byte[] tempBuffer;
+    public volatile boolean changedBuffer=false;
     //constants needed for the streaming:
     boolean m_stop = false; //Keep feeding data.
     AudioTrack m_audioTrack; //Our audiotrack that we write to.
@@ -220,15 +223,118 @@ public class MainActivity extends Activity {
         }
     }
 
-    Runnable feedToBuffer = new Runnable()
+     volatile Runnable feedToBuffer = new Runnable()
     {
         @Override
-        public void run() {
+        public synchronized void run() {
             Thread.currentThread().setPriority(Thread.MIN_PRIORITY);//Don't know what this does. But I guess its good.
             //While we have not stopped the audio, feed the buffer data2 to output.
+            byte[] testBuffer;
+            int testBufferDataSize;
+           // byte[] resultingBuffer;
+            //Load testBuffer:
+            try {
+                Log.d(TAG + "loading", "Starting to load testbuffer");
+                WavInfo wi = new WavInfo();
+                Log.d(TAG + "loading", "Attempting to get resource");
+                InputStream is = getResources().openRawResource(R.raw.beat1_mono);
+                Log.d(TAG + "loading", "Got resource, attempting header");
+                testBufferDataSize = wi.readHeader(is);
+                Log.d(TAG + "loading", "Read header, attempting to read resource to byte buffer.");
+                testBuffer = new byte[testBufferDataSize];
+                is.read(testBuffer, 0,testBufferDataSize);
+                is.close();
+                Log.d(TAG + "loading", "Finished loading testbuffer");
+            }
+                catch(IOException e ){throw new RuntimeException(e);}
+
+            //
+            int i = 0;
+            byte[] temp;
+            int startWritingPoint=0;
+            int counter=0;
             while(!m_stop)
             {
-                m_audioTrack.write(outputBuffer,0,outputBuffer.length);//To register changes faster, try writing shorter parts at a time.
+
+                temp = Arrays.copyOfRange(testBuffer,i,i+100);
+                byte[] resultingBuffer = new byte[temp.length];
+
+                if(changedBuffer)
+                {
+                    //Adding array data7 at the correct place
+                    //increment until you have changed everything back to where
+                    //you started. Then set false. 
+                    Log.d(TAG,"Buffer changed");
+                    Log.d(TAG,"Can you see this?");
+                    //Add buffer elements on the fly until all elements have been added.
+                    //Perhaps 10 elements at a time, and starting at the point we are in playing.
+                    //
+                    Log.d(TAG+"add","Entering addBufferToMix");
+                    short resPrevious=0;
+                    byte[] subBuffer = Arrays.copyOfRange(data7,i,i+100);
+                    //Log.d(TAG,"this is testBuffer.length: "+testBuffer.length);
+
+                    for (int m = 0; m < subBuffer.length; m += 2) {
+                      //  Log.d(TAG,"this is index: "+m);
+                        short buf1a = temp[m + 1];
+                        short buf2a = temp[m];
+                        buf1a = (short) ((buf1a & 0xff) << 8);
+                        buf2a = (short) (buf2a & 0xff);
+                        short buf1b = subBuffer[m + 1];
+                        short buf2b = subBuffer[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+
+                        short buf1c = (short) (buf1a + buf1b);
+                        short buf2c = (short) (buf2a + buf2b);
+
+                        short res = (short) (buf1c + buf2c);
+                        float temporary = (float)res;
+                        float temp2 = temporary/2;
+                        res = (short)temp2;
+
+                        if(res>10000) //Avoid 'normal' cases where amplitude shifts from f.ex. 4 to -2, which we want to keep.
+                        {
+                            if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
+                            {
+                                Log.d(TAG,"res:"+res+"");
+                                res = resPrevious;
+                            }
+                        }
+                        if(res<-10000)
+                        {
+                            if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
+                            {
+                                res = resPrevious;
+                            }
+                        }
+                        resPrevious=res;
+                        resultingBuffer[m] = (byte) res;
+                        resultingBuffer[m + 1] = (byte) (res >> 8);
+                        counter+=2;
+                    }
+                   // temp=resultingBuffer;
+                    Log.d(TAG,"temp just got changed.");
+                    //
+                    //outputBuffer=addBufferToMix(data7,dataSize7,outputBuffer,"thisFile");
+                    if(counter>=testBuffer.length)
+                    {
+                        Log.d(TAG,"Set changedBuffer to false");
+                        changedBuffer=false;
+                        counter=0;
+                    }
+                }
+                if(changedBuffer)
+                {
+                    temp = resultingBuffer;
+                }
+                Log.d(TAG,"writing to audioTrack");
+                m_audioTrack.write(temp,0,temp.length);//To register changes faster, try writing shorter parts at a time.
+                i=i+100;
+                if(i>outputBuffer.length-100)
+                {
+                    i=0;
+                }
             }
         }
     };
@@ -307,7 +413,11 @@ public class MainActivity extends Activity {
         b7.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    outputBuffer = addBufferToMix(data7,dataSize7,outputBuffer,"plusbuttonseven.wav");
+                  //  outputBuffer = addBufferToMix(data7,dataSize7,outputBuffer,"plusbuttonseven.wav");
+                   // tempBuffer=outputBuffer;
+                    changedBuffer=true;
+                    Log.d(TAG,"set changedBuffer to true");
+                   // m_audioTrack.write(outputBuffer,0,outputBuffer.length);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -393,8 +503,8 @@ public class MainActivity extends Activity {
             int frames = data2.length / 2; //2 bytes per frame.
             m_stop = false;
             m_audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT, dataSize,
-                    AudioTrack.MODE_STREAM);
+                    AudioFormat.ENCODING_PCM_16BIT, 100,
+                    AudioTrack.MODE_STREAM);//100 is hardcoded buffer size in bytes. 'datasize' is size of sample.
             m_audioTrack.play();
             audioTrackThread = new Thread(feedToBuffer);
             audioTrackThread.start();
@@ -455,7 +565,7 @@ public class MainActivity extends Activity {
         Log.d(TAG+"fill","Exiting fill all buffers");
         return true;
     }
-    byte[] addBufferToMix(byte[] buffer,int bufferSize,byte[] currentBuffer,String fileName)
+    synchronized byte[] addBufferToMix(byte[] buffer,int bufferSize,byte[] currentBuffer,String fileName)
     {
         Log.d(TAG+"add","Entering addBufferToMix");
         short resPrevious=0;
@@ -551,5 +661,9 @@ public class MainActivity extends Activity {
         ww.writeToWav(fileName);
         byte[] returnBuffer = data2;//
         return returnBuffer;
+    }
+    public synchronized byte[] getBufferUpdate()
+    {
+        return tempBuffer;
     }
 }
