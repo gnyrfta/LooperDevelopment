@@ -44,7 +44,7 @@ public class WavWriter {
            // String fileName = "testing.wav";
             File file = new File(sdCard,fileName);
             //file.createNewFile();
-           // File file = new File(Environment.getExternalStoragePublicDirectory(
+           // File file = new File(Envipronment.getExternalStoragePublicDirectory(
              //       Environment.DIRECTORY_MUSIC),"AudioTrackTester");
             FileOutputStream fos = new FileOutputStream(file);
             BufferedOutputStream bos = new BufferedOutputStream(fos);

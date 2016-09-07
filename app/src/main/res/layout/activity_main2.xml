@@ -12,65 +12,65 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Press the buttons to test audio."
+        android:text="Press the buttons to test streaming audio."
         android:id="@+id/text"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/text"
-        android:text="Sound 1"
+        android:text="Sound 6"
         android:id="@+id/buttonOne"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonOne"
-        android:text="Sound 2"
+        android:text="Sound 7"
         android:id="@+id/buttonTwo"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonTwo"
-        android:text="Sound 1 and 2 mixed."
+        android:text="Sound 8"
         android:id="@+id/buttonThree"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonThree"
-        android:text="Sound 1 and 2 premixed."
+        android:text="Sound 9"
         android:id="@+id/buttonFour"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonFour"
-        android:text="Start streaming clip."
+        android:text="Remove Sound 6"
         android:id="@+id/buttonFive"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonFive"
-        android:text="Stop streaming clip."
+        android:text="Remove Sound 7"
         android:id="@+id/buttonSix"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonSix"
-        android:text="Adds track to stream."
+        android:text="Remove Sound 8"
         android:id="@+id/buttonSeven"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonSeven"
-        android:text="Removes above track from stream."
+        android:text="Remove Sound 9"
         android:id="@+id/buttonEight"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonEight"
-        android:text="Adds buffer"
+        android:text="Does Nothing."
         android:id="@+id/buttonNine"
         />
 
