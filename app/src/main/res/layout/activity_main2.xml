@@ -23,9 +23,23 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/buttonOne"
+        android:layout_alignBaseline="@id/buttonOne"
+        android:text="Sound 10"
+        android:id="@+id/buttonTen"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_below="@id/buttonOne"
         android:text="Sound 7"
         android:id="@+id/buttonTwo"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/buttonTwo"
+        android:layout_alignBaseline="@id/buttonTwo"
+        android:text="Sound 11"
+        android:id="@+id/buttonEleven"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -42,35 +56,35 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonFour"
-        android:text="Remove Sound 6"
+        android:text="Sound 1"
         android:id="@+id/buttonFive"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonFive"
-        android:text="Remove Sound 7"
+        android:text="Sound 2"
         android:id="@+id/buttonSix"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonSix"
-        android:text="Remove Sound 8"
+        android:text="Sound 3"
         android:id="@+id/buttonSeven"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonSeven"
-        android:text="Remove Sound 9"
+        android:text="Sound 4"
         android:id="@+id/buttonEight"
         />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/buttonEight"
-        android:text="Does Nothing."
+        android:text="Sound 5"
         android:id="@+id/buttonNine"
         />
 

@@ -34,18 +34,31 @@ import java.util.Random;
 public class MainActivity extends Activity {
     private String TAG = "MainActivity";
     //These have to be at least accessible outside the scope of their methods, cause gonna have to mix them with each other.
-    public byte[] data;
+    public byte[] data1;
     public byte[] data2;
     public byte[] data3;
-    //
+    public byte[] data4;
+    public byte[] data5;
     public byte[] data6;
     public byte[] data7;//buffer for button seven.
     public byte[] data8;//buffer for button eight.
     public byte[] data9;//buffer for button nine.
+    public byte[] data10;
+    public byte[] data11;
+    public byte[] data12;
+    public int dataSize1;
+    public int dataSize2;
+    public int dataSize3;
+    public int dataSize4;
+    public int dataSize5;
     public int dataSize6;
     public int dataSize7;
     public int dataSize8;
     public int dataSize9;
+    public int dataSize10;
+    public int dataSize11;
+    public int dataSize12;
+
     public static volatile byte[] outputBuffer;
     public static volatile byte[] tempBuffer;
     public volatile boolean changedBuffer=false;
@@ -83,8 +96,7 @@ public class MainActivity extends Activity {
     public volatile int addCounter14=0;
     public volatile int addCounter15=0;
     public volatile int addCounter16=0;
-
-
+    //
     public volatile boolean removeBuffer1=false;
     public volatile boolean removeBuffer2=false;
     public volatile boolean removeBuffer3=false;
@@ -169,6 +181,8 @@ public class MainActivity extends Activity {
         int CHANNEL_OUT_MONO = 4;
         int MODE_STATIC = 0;
         int MODE_STREAM = 1;
+        //TO USE BELOW CODE, ADD AUDIO TRACK.
+        /*
         try {
             WavInfo wi = new WavInfo();
             InputStream is = getResources().openRawResource(R.raw.beat2_mono);
@@ -186,7 +200,7 @@ public class MainActivity extends Activity {
             at.play();
         } catch (IOException e) {
             throw e;
-        }
+        }*/
     }
 
     public void testAudio3() throws IOException {
@@ -195,6 +209,8 @@ public class MainActivity extends Activity {
         int CHANNEL_OUT_MONO = 4;
         int MODE_STATIC = 0;
         int MODE_STREAM = 1;
+        //TO USE BELOW CODE, ADD AUDIO TRACK:
+        /*
         try {
             WavInfo wi = new WavInfo();
             InputStream is = getResources().openRawResource(R.raw.beat2_mono);
@@ -261,7 +277,7 @@ public class MainActivity extends Activity {
             // at.play();
         } catch (IOException e) {
             throw e;
-        }
+        }*/
     }
 
     public void testAudio4() throws IOException {
@@ -270,6 +286,8 @@ public class MainActivity extends Activity {
         int CHANNEL_OUT_MONO = 4;
         int MODE_STATIC = 0;
         int MODE_STREAM = 1;
+        //TO USE BELOW CODE, ADD AUDIO FILE:
+        /*
         try {
             WavInfo wi = new WavInfo();
             InputStream is = getResources().openRawResource(R.raw.sound1_plus_sound2);
@@ -296,7 +314,7 @@ public class MainActivity extends Activity {
             at.play();
         } catch (IOException e) {
             throw e;
-        }
+        }*/
     }
 
      volatile Runnable feedToBuffer = new Runnable()
@@ -353,6 +371,206 @@ public class MainActivity extends Activity {
                     // Then check for value 1 -16 - each number is one byte array.
                     //Load correct byte array.
 
+                if(addBuffer1)
+                {
+                    byte[] subBuffer = Arrays.copyOfRange(data1,i,i+bufferLength);
+                    byte[] temporaryBufferWithAdjustedAmplitude = new byte[bufferLength];
+                    for(int m=0;m<subBuffer.length;m+=2)
+                    {
+                        short buf1a = temp[m + 1];
+                        short buf2a = temp[m];
+                        buf1a = (short) ((buf1a & 0xff) << 8);
+                        buf2a = (short) (buf2a & 0xff);
+                        short buf1b = subBuffer[m + 1];
+                        short buf2b = subBuffer[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Dividing amplitude by half and writing to temporary buffer.
+
+                        //Dividing amplitude by half and writing to temporary other buffer.
+                        short dudette = (short)(buf1b+buf2b);
+                        float fdudette = (float)(dudette/numberOfStreams);
+                        dudette = (short)fdudette;
+                        temporaryBufferWithAdjustedAmplitude[m]=(byte)dudette;
+                        temporaryBufferWithAdjustedAmplitude[m+1]=(byte)(dudette >> 8);
+                        //Getting values from temporary buffer.
+
+                        //Getting values from temporary other buffer.
+                        buf1b=temporaryBufferWithAdjustedAmplitude[m+1];
+                        buf2b=temporaryBufferWithAdjustedAmplitude[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Adding buffers.
+                        short buf1c = (short) (buf1a + buf1b);
+                        short buf2c = (short) (buf2a + buf2b);
+
+                        short res = (short) (buf1c + buf2c);
+                        resultingBuffer[m] = (byte) res;
+                        resultingBuffer[m + 1] = (byte) (res >> 8);
+                    }
+                    temp=resultingBuffer;
+                }
+
+                if(addBuffer2)
+                {
+                    byte[] subBuffer = Arrays.copyOfRange(data2,i,i+bufferLength);
+                    byte[] temporaryBufferWithAdjustedAmplitude = new byte[bufferLength];
+                    for(int m=0;m<subBuffer.length;m+=2)
+                    {
+                        short buf1a = temp[m + 1];
+                        short buf2a = temp[m];
+                        buf1a = (short) ((buf1a & 0xff) << 8);
+                        buf2a = (short) (buf2a & 0xff);
+                        short buf1b = subBuffer[m + 1];
+                        short buf2b = subBuffer[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Dividing amplitude by half and writing to temporary buffer.
+
+                        //Dividing amplitude by half and writing to temporary other buffer.
+                        short dudette = (short)(buf1b+buf2b);
+                        float fdudette = (float)(dudette/numberOfStreams);
+                        dudette = (short)fdudette;
+                        temporaryBufferWithAdjustedAmplitude[m]=(byte)dudette;
+                        temporaryBufferWithAdjustedAmplitude[m+1]=(byte)(dudette >> 8);
+                        //Getting values from temporary buffer.
+
+                        //Getting values from temporary other buffer.
+                        buf1b=temporaryBufferWithAdjustedAmplitude[m+1];
+                        buf2b=temporaryBufferWithAdjustedAmplitude[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Adding buffers.
+                        short buf1c = (short) (buf1a + buf1b);
+                        short buf2c = (short) (buf2a + buf2b);
+
+                        short res = (short) (buf1c + buf2c);
+                        resultingBuffer[m] = (byte) res;
+                        resultingBuffer[m + 1] = (byte) (res >> 8);
+                    }
+                    temp=resultingBuffer;
+                }
+
+                if(addBuffer3)
+                {
+                    byte[] subBuffer = Arrays.copyOfRange(data3,i,i+bufferLength);
+                    byte[] temporaryBufferWithAdjustedAmplitude = new byte[bufferLength];
+                    for(int m=0;m<subBuffer.length;m+=2)
+                    {
+                        short buf1a = temp[m + 1];
+                        short buf2a = temp[m];
+                        buf1a = (short) ((buf1a & 0xff) << 8);
+                        buf2a = (short) (buf2a & 0xff);
+                        short buf1b = subBuffer[m + 1];
+                        short buf2b = subBuffer[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Dividing amplitude by half and writing to temporary buffer.
+
+                        //Dividing amplitude by half and writing to temporary other buffer.
+                        short dudette = (short)(buf1b+buf2b);
+                        float fdudette = (float)(dudette/numberOfStreams);
+                        dudette = (short)fdudette;
+                        temporaryBufferWithAdjustedAmplitude[m]=(byte)dudette;
+                        temporaryBufferWithAdjustedAmplitude[m+1]=(byte)(dudette >> 8);
+                        //Getting values from temporary buffer.
+
+                        //Getting values from temporary other buffer.
+                        buf1b=temporaryBufferWithAdjustedAmplitude[m+1];
+                        buf2b=temporaryBufferWithAdjustedAmplitude[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Adding buffers.
+                        short buf1c = (short) (buf1a + buf1b);
+                        short buf2c = (short) (buf2a + buf2b);
+
+                        short res = (short) (buf1c + buf2c);
+                        resultingBuffer[m] = (byte) res;
+                        resultingBuffer[m + 1] = (byte) (res >> 8);
+                    }
+                    temp=resultingBuffer;
+                }
+
+                if(addBuffer4)
+                {
+                    byte[] subBuffer = Arrays.copyOfRange(data4,i,i+bufferLength);
+                    byte[] temporaryBufferWithAdjustedAmplitude = new byte[bufferLength];
+                    for(int m=0;m<subBuffer.length;m+=2)
+                    {
+                        short buf1a = temp[m + 1];
+                        short buf2a = temp[m];
+                        buf1a = (short) ((buf1a & 0xff) << 8);
+                        buf2a = (short) (buf2a & 0xff);
+                        short buf1b = subBuffer[m + 1];
+                        short buf2b = subBuffer[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Dividing amplitude by half and writing to temporary buffer.
+
+                        //Dividing amplitude by half and writing to temporary other buffer.
+                        short dudette = (short)(buf1b+buf2b);
+                        float fdudette = (float)(dudette/numberOfStreams);
+                        dudette = (short)fdudette;
+                        temporaryBufferWithAdjustedAmplitude[m]=(byte)dudette;
+                        temporaryBufferWithAdjustedAmplitude[m+1]=(byte)(dudette >> 8);
+                        //Getting values from temporary buffer.
+
+                        //Getting values from temporary other buffer.
+                        buf1b=temporaryBufferWithAdjustedAmplitude[m+1];
+                        buf2b=temporaryBufferWithAdjustedAmplitude[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Adding buffers.
+                        short buf1c = (short) (buf1a + buf1b);
+                        short buf2c = (short) (buf2a + buf2b);
+
+                        short res = (short) (buf1c + buf2c);
+                        resultingBuffer[m] = (byte) res;
+                        resultingBuffer[m + 1] = (byte) (res >> 8);
+                    }
+                    temp=resultingBuffer;
+                }
+
+                if(addBuffer5)
+                {
+                    byte[] subBuffer = Arrays.copyOfRange(data5,i,i+bufferLength);
+                    byte[] temporaryBufferWithAdjustedAmplitude = new byte[bufferLength];
+                    for(int m=0;m<subBuffer.length;m+=2)
+                    {
+                        short buf1a = temp[m + 1];
+                        short buf2a = temp[m];
+                        buf1a = (short) ((buf1a & 0xff) << 8);
+                        buf2a = (short) (buf2a & 0xff);
+                        short buf1b = subBuffer[m + 1];
+                        short buf2b = subBuffer[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Dividing amplitude by half and writing to temporary buffer.
+
+                        //Dividing amplitude by half and writing to temporary other buffer.
+                        short dudette = (short)(buf1b+buf2b);
+                        float fdudette = (float)(dudette/numberOfStreams);
+                        dudette = (short)fdudette;
+                        temporaryBufferWithAdjustedAmplitude[m]=(byte)dudette;
+                        temporaryBufferWithAdjustedAmplitude[m+1]=(byte)(dudette >> 8);
+                        //Getting values from temporary buffer.
+
+                        //Getting values from temporary other buffer.
+                        buf1b=temporaryBufferWithAdjustedAmplitude[m+1];
+                        buf2b=temporaryBufferWithAdjustedAmplitude[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Adding buffers.
+                        short buf1c = (short) (buf1a + buf1b);
+                        short buf2c = (short) (buf2a + buf2b);
+
+                        short res = (short) (buf1c + buf2c);
+                        resultingBuffer[m] = (byte) res;
+                        resultingBuffer[m + 1] = (byte) (res >> 8);
+                    }
+                    temp=resultingBuffer;
+                }
+                //
                 if(addBuffer6)
                 {
                     byte[] subBuffer = Arrays.copyOfRange(data6,i,i+bufferLength);
@@ -511,6 +729,85 @@ public class MainActivity extends Activity {
                     temp=resultingBuffer;
                 }
                 //
+                if(addBuffer10)
+                {
+                    byte[] subBuffer = Arrays.copyOfRange(data10,i,i+bufferLength);
+                    byte[] temporaryBufferWithAdjustedAmplitude = new byte[bufferLength];
+                    for(int m=0;m<subBuffer.length;m+=2)
+                    {
+                        short buf1a = temp[m + 1];
+                        short buf2a = temp[m];
+                        buf1a = (short) ((buf1a & 0xff) << 8);
+                        buf2a = (short) (buf2a & 0xff);
+                        short buf1b = subBuffer[m + 1];
+                        short buf2b = subBuffer[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Dividing amplitude by half and writing to temporary buffer.
+
+                        //Dividing amplitude by half and writing to temporary other buffer.
+                        short dudette = (short)(buf1b+buf2b);
+                        float fdudette = (float)(dudette/numberOfStreams);
+                        dudette = (short)fdudette;
+                        temporaryBufferWithAdjustedAmplitude[m]=(byte)dudette;
+                        temporaryBufferWithAdjustedAmplitude[m+1]=(byte)(dudette >> 8);
+                        //Getting values from temporary buffer.
+
+                        //Getting values from temporary other buffer.
+                        buf1b=temporaryBufferWithAdjustedAmplitude[m+1];
+                        buf2b=temporaryBufferWithAdjustedAmplitude[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Adding buffers.
+                        short buf1c = (short) (buf1a + buf1b);
+                        short buf2c = (short) (buf2a + buf2b);
+
+                        short res = (short) (buf1c + buf2c);
+                        resultingBuffer[m] = (byte) res;
+                        resultingBuffer[m + 1] = (byte) (res >> 8);
+                    }
+                    temp=resultingBuffer;
+                }
+                //
+                if(addBuffer11)
+                {
+                    byte[] subBuffer = Arrays.copyOfRange(data11,i,i+bufferLength);
+                    byte[] temporaryBufferWithAdjustedAmplitude = new byte[bufferLength];
+                    for(int m=0;m<subBuffer.length;m+=2)
+                    {
+                        short buf1a = temp[m + 1];
+                        short buf2a = temp[m];
+                        buf1a = (short) ((buf1a & 0xff) << 8);
+                        buf2a = (short) (buf2a & 0xff);
+                        short buf1b = subBuffer[m + 1];
+                        short buf2b = subBuffer[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Dividing amplitude by half and writing to temporary buffer.
+
+                        //Dividing amplitude by half and writing to temporary other buffer.
+                        short dudette = (short)(buf1b+buf2b);
+                        float fdudette = (float)(dudette/numberOfStreams);
+                        dudette = (short)fdudette;
+                        temporaryBufferWithAdjustedAmplitude[m]=(byte)dudette;
+                        temporaryBufferWithAdjustedAmplitude[m+1]=(byte)(dudette >> 8);
+                        //Getting values from temporary buffer.
+
+                        //Getting values from temporary other buffer.
+                        buf1b=temporaryBufferWithAdjustedAmplitude[m+1];
+                        buf2b=temporaryBufferWithAdjustedAmplitude[m];
+                        buf1b = (short) ((buf1b & 0xff) << 8);
+                        buf2b = (short) (buf2b & 0xff);
+                        //Adding buffers.
+                        short buf1c = (short) (buf1a + buf1b);
+                        short buf2c = (short) (buf2a + buf2b);
+
+                        short res = (short) (buf1c + buf2c);
+                        resultingBuffer[m] = (byte) res;
+                        resultingBuffer[m + 1] = (byte) (res >> 8);
+                    }
+                    temp=resultingBuffer;
+                }
 
                 Log.d(TAG,"writing to audioTrack");
                 m_audioTrack.write(temp,0,temp.length);//To register changes faster, try writing shorter parts at a time.
@@ -527,7 +824,6 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
-
         try
         {
             fillAllBuffers();//Load data7, data8, data9.
@@ -543,19 +839,27 @@ public class MainActivity extends Activity {
         Button b7 = (Button) findViewById(R.id.buttonSeven);
         Button b8 = (Button) findViewById(R.id.buttonEight);
         Button b9 = (Button) findViewById(R.id.buttonNine);
+        Button b10 = (Button) findViewById(R.id.buttonTen);
+        Button b11 = (Button) findViewById(R.id.buttonEleven);
+
         b1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(numberOfStreams==0)
+                    if(!addBuffer6)
                     {
-                        numberOfStreams+=1.0;
-                        addBuffer6=true;
-                        startStreaming();
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer6 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer6 = true;
+                        }
                     }
-                    else
+                    else if(addBuffer6)
                     {
-                        numberOfStreams+=1.0;
-                        addBuffer6=true;
+                        addBuffer6=false;
+                        numberOfStreams-=1.0;
                     }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
@@ -568,16 +872,21 @@ public class MainActivity extends Activity {
         b2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(numberOfStreams==0)
+                    if(!addBuffer7)
                     {
-                        numberOfStreams+=1.0;
-                        addBuffer7=true;
-                        startStreaming();
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer7 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer7 = true;
+                        }
                     }
-                    else
+                    else if(addBuffer7)
                     {
-                        numberOfStreams+=1.0;
-                        addBuffer7=true;
+                        addBuffer7=false;
+                        numberOfStreams-=1.0;
                     }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
@@ -590,16 +899,21 @@ public class MainActivity extends Activity {
         b3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(numberOfStreams==0)
+                    if(!addBuffer8)
                     {
-                        numberOfStreams+=1.0;
-                        addBuffer8=true;
-                        startStreaming();
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer8 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer8 = true;
+                        }
                     }
-                    else
+                    else if(addBuffer8)
                     {
-                        numberOfStreams+=1.0;
-                        addBuffer8=true;
+                        addBuffer8=false;
+                        numberOfStreams-=1.0;
                     }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
@@ -612,16 +926,21 @@ public class MainActivity extends Activity {
         b4.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(numberOfStreams==0)
+                    if(!addBuffer9)
                     {
-                        numberOfStreams+=1.0;
-                        addBuffer9=true;
-                        startStreaming();
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer9 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer9 = true;
+                        }
                     }
-                    else
+                    else if(addBuffer9)
                     {
-                        numberOfStreams+=1.0;
-                        addBuffer9=true;
+                        addBuffer9=false;
+                        numberOfStreams-=1.0;
                     }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
@@ -634,13 +953,21 @@ public class MainActivity extends Activity {
         b5.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(addBuffer6)
+                    if(!addBuffer1)
                     {
-                        addBuffer6=false;
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer1 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer1 = true;
+                        }
                     }
-                    else
+                    else if(addBuffer1)
                     {
-                        //Do nothing.
+                        addBuffer1=false;
+                        numberOfStreams-=1.0;
                     }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
@@ -653,13 +980,21 @@ public class MainActivity extends Activity {
         b6.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(addBuffer7)
+                    if(!addBuffer2)
                     {
-                        addBuffer7=false;
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer2 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer2 = true;
+                        }
                     }
-                    else
+                    else if(addBuffer2)
                     {
-                        //Do nothing.
+                        addBuffer2=false;
+                        numberOfStreams-=1.0;
                     }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
@@ -672,13 +1007,21 @@ public class MainActivity extends Activity {
         b7.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(addBuffer8)
+                    if(!addBuffer3)
                     {
-                        addBuffer8=false;
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer3 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer3 = true;
+                        }
                     }
-                    else
+                    else if(addBuffer3)
                     {
-                        //Do nothing.
+                        addBuffer3=false;
+                        numberOfStreams-=1.0;
                     }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
@@ -691,13 +1034,21 @@ public class MainActivity extends Activity {
         b8.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(addBuffer9)
+                    if(!addBuffer4)
                     {
-                        addBuffer9=false;
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer4 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer4 = true;
+                        }
                     }
-                    else
+                    else if(addBuffer4)
                     {
-                        //Do nothing.
+                        addBuffer4=false;
+                        numberOfStreams-=1.0;
                     }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
@@ -710,10 +1061,72 @@ public class MainActivity extends Activity {
         b9.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
+                    if(!addBuffer5)
+                    {
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer5 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer5 = true;
+                        }
+                    }
+                    else if(addBuffer5)
+                    {
+                        addBuffer5=false;
+                        numberOfStreams-=1.0;
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
 
-                    final CharSequence text = "Doing nothing.";
-                    Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    toast.show();
+        b10.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    if(!addBuffer10)
+                    {
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer10 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer10 = true;
+                        }
+                    }
+                    else if(addBuffer10)
+                    {
+                        addBuffer10=false;
+                        numberOfStreams-=1.0;
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        b11.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    if(!addBuffer11)
+                    {
+                        if (numberOfStreams == 0) {
+                            numberOfStreams += 1.0;
+                            addBuffer11 = true;
+                            startStreaming();
+                        } else {
+                            numberOfStreams += 1.0;
+                            addBuffer11 = true;
+                        }
+                    }
+                    else if(addBuffer11)
+                    {
+                        addBuffer11=false;
+                        numberOfStreams-=1.0;
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -923,7 +1336,7 @@ public class MainActivity extends Activity {
             Log.d(TAG+"loading","Starting loading #8");
             //
             WavInfo wi2 = new WavInfo();
-            InputStream is2 = getResources().openRawResource(R.raw.beat2_mono);
+            InputStream is2 = getResources().openRawResource(R.raw.sub_bass2);
             dataSize8 = wi2.readHeader(is2);
             data8 = new byte[dataSize8];
             is2.read(data8, 0, data8.length);
@@ -936,8 +1349,58 @@ public class MainActivity extends Activity {
             data9 = new byte[dataSize9];
             is3.read(data9, 0, data9.length);
             is3.close();
-            Log.d(TAG+"loading","Finished loading all 3 files.");
 
+            WavInfo wi4 = new WavInfo();
+            InputStream is4 = getResources().openRawResource(R.raw.beat3_mono);
+            dataSize1 = wi4.readHeader(is4);
+            data1 = new byte[dataSize1];
+            is4.read(data1, 0, data1.length);
+            is4.close();
+
+            WavInfo wi5 = new WavInfo();
+            InputStream is5 = getResources().openRawResource(R.raw.boxy_synth);
+            dataSize2 = wi5.readHeader(is5);
+            data2 = new byte[dataSize2];
+            is5.read(data2, 0, data2.length);
+            is5.close();
+
+            WavInfo wi6 = new WavInfo();
+            InputStream is6 = getResources().openRawResource(R.raw.bright_strings);
+            dataSize3 = wi6.readHeader(is6);
+            data3 = new byte[dataSize3];
+            is6.read(data3, 0, data3.length);
+            is6.close();
+
+            WavInfo wi7 = new WavInfo();
+            InputStream is7 = getResources().openRawResource(R.raw.chords);
+            dataSize4 = wi7.readHeader(is7);
+            data4 = new byte[dataSize4];
+            is7.read(data4, 0, data4.length);
+            is7.close();
+
+            WavInfo wi8 = new WavInfo();
+            InputStream is8 = getResources().openRawResource(R.raw.hihat);
+            dataSize5 = wi8.readHeader(is8);
+            data5 = new byte[dataSize5];
+            is8.read(data5, 0, data5.length);
+            is8.close();
+
+            WavInfo wi9 = new WavInfo();
+            InputStream is9 = getResources().openRawResource(R.raw.sub_bass1);
+            dataSize10 = wi9.readHeader(is9);
+            data10 = new byte[dataSize10];
+            is9.read(data10, 0, data10.length);
+            is9.close();
+
+            WavInfo wi10 = new WavInfo();
+            InputStream is10 = getResources().openRawResource(R.raw.lead1);
+            dataSize11 = wi10.readHeader(is10);
+            data11 = new byte[dataSize11];
+            is10.read(data11, 0, data11.length);
+            is10.close();
+
+
+            Log.d(TAG+"loading","Finished loading all 11 files.");
             //
         } catch (IOException e) {
             throw e;
