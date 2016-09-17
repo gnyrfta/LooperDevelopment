@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.david.audiotracktest">
+    package="com.gnyrfta.david.audiotracklooper">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="18"/>
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/icon_1"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-        <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="18"/>
-        <activity android:name=".MainActivity">
+        android:theme="@style/AppTheme"
+        android:name="com.gnyrfta.david.audiotracklooper.MyApp">
+
+        <activity android:name="com.gnyrfta.david.audiotracklooper.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
