@@ -1336,7 +1336,9 @@ public class MainActivity extends Activity {
                             addBuffer1 = true;
                             startStreaming();
                             ((ImageButton) findViewById(R.id.buttonOne)).setImageDrawable(greenButtonLightOn);
-                        } else {
+                        }
+                        else
+                        {
                             numberOfStreams += 1.0;
                             addBuffer1 = true;
                             ((ImageButton) findViewById(R.id.buttonOne)).setImageDrawable(greenButtonLightOn);
@@ -1347,12 +1349,19 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation1.setRepeatCount((int)thisManyTimes);
-                            b1.startAnimation(animation1);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation1.setRepeatCount((int) thisManyTimes);
+                                b1.startAnimation(animation1);
+                            }
                         }
                     }
                     else if(addBuffer1)
                     {
+                        if(!letIn1)
+                        {
+                            b1.clearAnimation();
+                        }
                         addBuffer1=false;
                         numberOfStreams-=1.0;
                         addCounter1=0;
@@ -1361,7 +1370,8 @@ public class MainActivity extends Activity {
                         if(numberOfStreams==0)
                         {
                             stopStream=true;
-                        }                    }
+                        }
+                    }
                     //final CharSequence text = "Testing 1 2 3";
                     //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
                     //toast.show();
@@ -1393,14 +1403,21 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation2.setRepeatCount((int)thisManyTimes);
-                            b2.startAnimation(animation2);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation2.setRepeatCount((int) thisManyTimes);
+                                b2.startAnimation(animation2);
+                            }
                         }
 
 
                     }
                     else if(addBuffer2)
                     {
+                        if(!letIn2)
+                        {
+                            b2.clearAnimation();
+                        }
                         addBuffer2=false;
                         numberOfStreams-=1.0;
                         addCounter2=0;
@@ -1441,13 +1458,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation3.setRepeatCount((int)thisManyTimes);
-                            b3.startAnimation(animation3);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation3.setRepeatCount((int) thisManyTimes);
+                                b3.startAnimation(animation3);
+                            }
                         }
 
                     }
                     else if(addBuffer3)
                     {
+                        if(!letIn3)
+                        {
+                            b3.clearAnimation();
+                        }
                         addBuffer3=false;
                         numberOfStreams-=1.0;
                         addCounter3=0;
@@ -1487,13 +1511,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation4.setRepeatCount((int)thisManyTimes);
-                            b4.startAnimation(animation4);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation4.setRepeatCount((int) thisManyTimes);
+                                b4.startAnimation(animation4);
+                            }
                         }
                         ((ImageButton) findViewById(R.id.buttonFour)).setImageDrawable(yellowButtonLightOn);
                     }
                     else if(addBuffer4)
                     {
+                        if(!letIn4)
+                        {
+                            b4.clearAnimation();
+                        }
                         addBuffer4=false;
                         numberOfStreams-=1.0;
                         addCounter4=0;
@@ -1533,14 +1564,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation5.setRepeatCount((int)thisManyTimes);
-                            b5.startAnimation(animation5);
-
+                            if(thisManyTimes!=-1)
+                            {
+                                animation5.setRepeatCount((int) thisManyTimes);
+                                b5.startAnimation(animation5);
+                            }
                         }
                         ((ImageButton) findViewById(R.id.buttonFive)).setImageDrawable(yellowButtonLightOn);
                     }
                     else if(addBuffer5)
                     {
+                        if(!letIn5)
+                        {
+                            b5.clearAnimation();
+                        }
                         addBuffer5=false;
                         numberOfStreams-=1.0;
                         addCounter5=0;
@@ -1580,13 +1617,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation6.setRepeatCount((int)thisManyTimes);
-                            b6.startAnimation(animation6);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation6.setRepeatCount((int) thisManyTimes);
+                                b6.startAnimation(animation6);
+                            }
                         }
                         ((ImageButton) findViewById(R.id.buttonSix)).setImageDrawable(yellowButtonLightOn);
                     }
                     else if(addBuffer6)
                     {
+                        if(!letIn6)
+                        {
+                            b6.clearAnimation();
+                        }
                         addBuffer6=false;
                         numberOfStreams-=1.0;
                         addCounter6=0;
@@ -1617,7 +1661,9 @@ public class MainActivity extends Activity {
                             numberOfStreams += 1.0;
                             addBuffer7 = true;
                             startStreaming();
-                        } else {
+                        }
+                        else
+                        {
                             numberOfStreams += 1.0;
                             addBuffer7 = true;
                             int m = outputBuffer.length-i;
@@ -1627,13 +1673,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation7.setRepeatCount((int)thisManyTimes);
-                            b7.startAnimation(animation7);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation7.setRepeatCount((int) thisManyTimes);
+                                b7.startAnimation(animation7);
+                            }
                         }
                         ((ImageButton) findViewById(R.id.buttonSeven)).setImageDrawable(redButtonLightOn);
                     }
                     else if(addBuffer7)
                     {
+                        if(!letIn7)
+                        {
+                            b7.clearAnimation();
+                        }
                         addBuffer7=false;
                         numberOfStreams-=1.0;
                         addCounter7=0;
@@ -1674,13 +1727,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation8.setRepeatCount((int)thisManyTimes);
-                            b8.startAnimation(animation8);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation8.setRepeatCount((int) thisManyTimes);
+                                b8.startAnimation(animation8);
+                            }
                         }
                         ((ImageButton) findViewById(R.id.buttonEight)).setImageDrawable(redButtonLightOn);
                     }
                     else if(addBuffer8)
                     {
+                        if(!letIn8)
+                        {
+                            b8.clearAnimation();
+                        }
                         addBuffer8=false;
                         numberOfStreams-=1.0;
                         addCounter8=0;
@@ -1720,13 +1780,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation9.setRepeatCount((int)thisManyTimes);
-                            b9.startAnimation(animation9);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation9.setRepeatCount((int) thisManyTimes);
+                                b9.startAnimation(animation9);
+                            }
                         }
                         ((ImageButton) findViewById(R.id.buttonNine)).setImageDrawable(redButtonLightOn);
                     }
                     else if(addBuffer9)
                     {
+                        if(!letIn9)
+                        {
+                            b9.clearAnimation();
+                        }
                         addBuffer9=false;
                         numberOfStreams-=1.0;
                         addCounter9=0;
@@ -1765,13 +1832,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation10.setRepeatCount((int)thisManyTimes);
-                            b10.startAnimation(animation10);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation10.setRepeatCount((int) thisManyTimes);
+                                b10.startAnimation(animation10);
+                            }
                         }
                         ((ImageButton) findViewById(R.id.buttonTen)).setImageDrawable(redButtonLightOn);
                     }
                     else if(addBuffer10)
                     {
+                        if(!letIn10)
+                        {
+                            b10.clearAnimation();
+                        }
                         addBuffer10=false;
                         numberOfStreams-=1.0;
                         addCounter10=0;
@@ -1814,13 +1888,20 @@ public class MainActivity extends Activity {
                             Log.d(TAG,"Time in milliseconds left: "+timeInMilliSecondsLeft);
                             Log.d(TAG,"Repeat this many times: "+repeatTimes);
                             int thisManyTimes=(int)repeatTimes-1;
-                            animation11.setRepeatCount((int)thisManyTimes);
-                            b11.startAnimation(animation11);
+                            if(thisManyTimes!=-1)
+                            {
+                                animation11.setRepeatCount((int) thisManyTimes);
+                                b11.startAnimation(animation11);
+                            }
                         }
                         ((ImageButton) findViewById(R.id.buttonEleven)).setImageDrawable(redButtonLightOn);
                     }
                     else if(addBuffer11)
                     {
+                        if(!letIn11)
+                        {
+                            b11.clearAnimation();
+                        }
                         addBuffer11=false;
                         numberOfStreams-=1.0;
                         addCounter11=0;
