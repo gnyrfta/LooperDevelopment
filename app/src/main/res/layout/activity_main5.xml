@@ -1,18 +1,52 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
     android:orientation="vertical"
     android:background="@drawable/red_black_gradient_background"
     >
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
         android:orientation="vertical"
         >
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="10dp">
+            <Button
+                android:id="@+id/buttonRecord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:text="Record"/>
+            <Button
+                android:id="@+id/buttonBackwards"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:text="Backwards"/>
+            <Button
+                android:id="@+id/buttonEcho"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:text="Echo"/>
+            <Button
+                android:id="@+id/buttonEcho2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:text="Echo2"/>
+        </LinearLayout>
         <LinearLayout
             android:weightSum="4"
             android:orientation="horizontal"
@@ -230,6 +264,51 @@
                 android:layout_weight="1"/>
             <ImageButton
                 android:id="@+id/buttonTwenty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/blue_square_button3"
+                android:background="@android:color/transparent"
+                android:layout_weight="1"/>
+        </LinearLayout>
+        <LinearLayout
+            android:weightSum="4"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginBottom="0dp">
+            <ImageButton
+                android:id="@+id/buttonTwentyone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/blue_square_button3"
+                android:background="@android:color/transparent"
+                android:layout_weight="1"
+                />
+            <ImageButton
+                android:id="@+id/buttonTwentytwo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/blue_square_button3"
+                android:background="@android:color/transparent"
+                android:layout_weight="1"/>
+            <ImageButton
+                android:id="@+id/buttonTwentythree"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/blue_square_button3"
+                android:background="@android:color/transparent"
+                android:layout_weight="1"/>
+            <ImageButton
+                android:id="@+id/buttonTwentyfour"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
