@@ -1,5 +1,5 @@
 This is a fork of AudioTrackLooper. It is for testing different things. Right now it contains: 
 * Record to wav file. 
 * Change playdirection to backwards.
-* Cumulative echo - might not work right. 
-* Echo placed on every different track. Still working on this. 
+* Cumulative echo - feedback kind of - might not work right. 
+* Echo placed on every different track that is not cumulative. Still working on this. 
