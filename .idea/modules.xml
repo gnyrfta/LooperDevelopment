@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LooperDevelopment.iml" filepath="$PROJECT_DIR$/LooperDevelopment.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gnyrftalibrary/gnyrftalibrary.iml" filepath="$PROJECT_DIR$/gnyrftalibrary/gnyrftalibrary.iml" />
     </modules>
   </component>
 </project>

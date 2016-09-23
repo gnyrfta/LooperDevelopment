@@ -28,13 +28,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 /**
- * Created by david on 2016-08-29.
+ * This a testing ground for new stuffs for AudioTrackLooper.. Basically a GUI with 24 buttons for sounds, 16 loopers and 8 play-onces, and some buttons
+ * for effects and stuff - record, backwards, cumulative echo and normal echo.
+ * The audio is read from wav files to byte arrays, mixed down to one byte array and fed to AudioTrack.
+ * All this mixing happens in the runnable feedToBuffer.
+ * Created by David (me).
  */
 public class MainActivity extends Activity {
     private String TAG = "MainActivity";
-    //These have to be at least accessible outside the scope of their methods, cause gonna have to mix them with each other.
+    //Arrays of bytes containing the data chunk of the wav files:
     public byte[] data1;
     public byte[] data2;
     public byte[] data3;
@@ -59,6 +62,7 @@ public class MainActivity extends Activity {
     public byte[] data22;
     public byte[] data23;
     public byte[] data24;
+    //Arrays of bytes containing the data chunk of the wav-file, with positions scooted by an amount specified by the delay integer:
     public byte[] dataEcho1;
     public byte[] dataEcho2;
     public byte[] dataEcho3;
@@ -71,7 +75,7 @@ public class MainActivity extends Activity {
     public byte[] dataEcho10;
     public byte[] dataEcho11;
     public byte[] dataEcho17;
-
+    //Variables holding the size of the data chunk:
     public int dataSize1;
     public int dataSize2;
     public int dataSize3;
@@ -108,27 +112,33 @@ public class MainActivity extends Activity {
     public int dataSizeEcho10;
     public int dataSizeEcho11;
     public int dataSizeEcho17;
-
-
-
-
+    //A byte array that is the size of a data array for the entire loop length.
+    //It is used to check when we should restart the loop. When the integer i=outputBuffer.length, i=0 and the loop restarts. At this point qued tracks are let in.
     public static volatile byte[] outputBuffer;
+    //Not sure what this one does. Remove?
     public static volatile byte[] tempBuffer;
-    public volatile boolean changedBuffer=false;
+    //This integer keeps track of when the loop should restart.
     public volatile int i=0;
+    //Self-explanatory.
     public volatile boolean recording=false;
     public volatile boolean saveRecording=false;
+    public volatile boolean firstLoopRecording=false;
     public volatile boolean backwards=false;
+    //There are two echo-functions. This one is echo on the final mix as opposed to on each track.
+    //This one is also cumulative - it echoes the echo - so it does a feedback thing.
     public volatile boolean echoing=false;
     public volatile boolean firstTimeEchoing=false;
     public volatile boolean addEcho=false;
     public volatile int echoCounter=0;
     public volatile int echoLoopCounter=0;
-    public volatile int delay=20000; // 20 000 gives a delay of 20 000/88200 ~ 1/4 second.
+    // 20 000 gives a delay of 20 000/88200 ~ 1/4 second.
     //This is echo, for reverb, good starting point should be  2646, which should give 30 ms echo.
+    //Both kinds of echo have their delay set using this variable. They should probably have a variable each later.
+    public volatile int delay=20000;
+    //This echo uses the above echo arrays, so the echo is not feeding back on itself.
+    //In most cases, this is probably what to use. The other one is more of a distortion.
     public volatile boolean echoing2=false;
-
-    //
+    //The byte arrays are added to the mix when i=0 if these are set to true:
     public volatile boolean addBuffer1=false;
     public volatile boolean addBuffer2=false;
     public volatile boolean addBuffer3=false;
@@ -149,10 +159,9 @@ public class MainActivity extends Activity {
     public volatile boolean addBuffer18=false;
     public volatile boolean addBuffer19=false;
     public volatile boolean addBuffer20=false;
-    //
+    //This is set to true if the AudioLoop should be stopped.
     public volatile boolean stopStream=false;
-    public volatile boolean firstLoopRecording=false;
-    //
+    //When the loop restarts and i=0, this is set to true:
     public volatile boolean letIn1=false;
     public volatile boolean letIn2=false;
     public volatile boolean letIn3=false;
@@ -165,7 +174,7 @@ public class MainActivity extends Activity {
     public volatile boolean letIn10=false;
     public volatile boolean letIn11=false;
     public volatile boolean letIn12=false;
-
+    //These keep track of where in the playing of a track we are.
     public volatile int addCounter1=0;
     public volatile int addCounter2=0;
     public volatile int addCounter3=0;
@@ -202,47 +211,13 @@ public class MainActivity extends Activity {
     public volatile int addCounterEcho10=0;
     public volatile int addCounterEcho11=0;
     public volatile int addCounterEcho17=0;
-
-
-    //
-    public volatile boolean removeBuffer1=false;
-    public volatile boolean removeBuffer2=false;
-    public volatile boolean removeBuffer3=false;
-    public volatile boolean removeBuffer4=false;
-    public volatile boolean removeBuffer5=false;
-    public volatile boolean removeBuffer6=false;
-    public volatile boolean removeBuffer7=false;
-    public volatile boolean removeBuffer8=false;
-    public volatile boolean removeBuffer9=false;
-    public volatile boolean removeBuffer10=false;
-    public volatile boolean removeBuffer11=false;
-    public volatile boolean removeBuffer12=false;
-    public volatile boolean removeBuffer13=false;
-    public volatile boolean removeBuffer14=false;
-    public volatile boolean removeBuffer15=false;
-    public volatile boolean removeBuffer16=false;
-    //
-    public volatile int removeCounter1=0;
-    public volatile int removeCounter2=0;
-    public volatile int removeCounter3=0;
-    public volatile int removeCounter4=0;
-    public volatile int removeCounter5=0;
-    public volatile int removeCounter6=0;
-    public volatile int removeCounter7=0;
-    public volatile int removeCounter8=0;
-    public volatile int removeCounter9=0;
-    public volatile int removeCounter10=0;
-    public volatile int removeCounter11=0;
-    public volatile int removeCounter12=0;
-    public volatile int removeCounter13=0;
-    public volatile int removeCounter14=0;
-    public volatile int removeCounter15=0;
-    public volatile int removeCounter16=0;
-
+    //The buffer length decides how often we write to the Audio output.
+    //Shorter buffer length gives less latency.
+    //Longer buffer length reduces the risk of crackling.
     public volatile int bufferLength=1000;
-
+    //How many byte arrays are currently being added to the mix?
     public volatile float numberOfStreams=0;
-//Get Drawables:
+    //Get Drawables:
     private static Drawable greenButtonLightOn = MyApp.context().getResources().getDrawable(R.drawable.green_square_button_with_light);
     private static Drawable greenButtonLightOff = MyApp.context().getResources().getDrawable(R.drawable.green_square_button);
     private static Drawable yellowButtonLightOn = MyApp.context().getResources().getDrawable(R.drawable.yellow_square_button_with_light);
@@ -253,7 +228,7 @@ public class MainActivity extends Activity {
     private static Drawable redButtonLightOff = MyApp.context().getResources().getDrawable(R.drawable.red_square_button);    //
     private static Drawable blueButtonLightOn = MyApp.context().getResources().getDrawable(R.drawable.blue_square_button3_light_on);
     private static Drawable blueButtonLightOff = MyApp.context().getResources().getDrawable(R.drawable.blue_square_button3);
-
+    //Define buttons for layout:
     ImageButton b1;
     ImageButton b2;
     ImageButton b3;
@@ -270,26 +245,14 @@ public class MainActivity extends Activity {
     ImageButton b14;
     ImageButton b15;
     ImageButton b16;
-   /* private static Drawable purpleButton2 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button2);
-    private static Drawable purpleButton3 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button3);
-    private static Drawable purpleButton4 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button4);
-    private static Drawable purpleButton5 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button5);
-    private static Drawable purpleButton6 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button6);
-    private static Drawable purpleButton7 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button7);
-    private static Drawable purpleButton8 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button8);
-    private static Drawable purpleButton9 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button9);
-    private static Drawable purpleButton10 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button10);
-    private static Drawable purpleButton11 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button11);
-    private static Drawable purpleButton12 = MyApp.context().getResources().getDrawable(R.drawable.purple_square_button12);*/
-
-
-
-    //
 
     //constants needed for the streaming:
-    volatile boolean m_stop = false; //Keep feeding data.
-    AudioTrack m_audioTrack; //Our audiotrack that we write to.
-    Thread audioTrackThread; //Our thread where we write to the AudioTrack.
+    //Keep feeding data to AudioTrack:
+    volatile boolean m_stop = false;
+    //Our audiotrack that we write to:
+    AudioTrack m_audioTrack;
+    //Our thread where we write to the AudioTrack:
+    Thread audioTrackThread;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -301,214 +264,32 @@ public class MainActivity extends Activity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-    //testAudio -> testAudio4 will not be used when trying to get STREAM to work.
-    public void testAudio() throws IOException {
-        int STREAM_MUSIC = 3;
-        int ENCODING_PCM_16BIT = 2;
-        int CHANNEL_OUT_MONO = 4;
-        int MODE_STATIC = 0;
-        int MODE_STREAM = 1;
-        try {
-            WavInfo wi = new WavInfo();
-            InputStream is = getResources().openRawResource(R.raw.beat1_mono);
-            int dataSize = wi.readHeader(is);
-            byte[] data = new byte[dataSize];
-            is.read(data, 0, data.length);
-            is.close();
-            AudioTrack at = new AudioTrack(STREAM_MUSIC, 44100, CHANNEL_OUT_MONO, ENCODING_PCM_16BIT, dataSize, MODE_STATIC);
-            at.write(data, 0, data.length);
-            int frames = data.length / 2; //2 bytes per frame.
-            Log.d(TAG, "this is data length: " + data.length);
-            Log.d(TAG, "this is assumed frame number:" + frames);
-            at.setLoopPoints(0, frames, 3);
-            at.play();
-        } catch (IOException e) {
-            throw e;
-        }
-    }
 
-    public void testAudio2() throws IOException {
-        int STREAM_MUSIC = 3;
-        int ENCODING_PCM_16BIT = 2;
-        int CHANNEL_OUT_MONO = 4;
-        int MODE_STATIC = 0;
-        int MODE_STREAM = 1;
-        //TO USE BELOW CODE, ADD AUDIO TRACK.
-        /*
-        try {
-            WavInfo wi = new WavInfo();
-            InputStream is = getResources().openRawResource(R.raw.beat2_mono);
-            int dataSize = wi.readHeader(is);
-            byte[] data = new byte[dataSize];
-            is.read(data, 0, data.length);
-            is.close();
-
-            AudioTrack at = new AudioTrack(STREAM_MUSIC, 44100, CHANNEL_OUT_MONO, ENCODING_PCM_16BIT, dataSize, MODE_STATIC);
-            at.write(data, 0, data.length);
-            int frames = data.length / 2; //2 bytes per frame.
-            Log.d(TAG, "this is data length: " + data.length);
-            Log.d(TAG, "this is assumed frame number:" + frames);
-            at.setLoopPoints(0, frames, 3);
-            at.play();
-        } catch (IOException e) {
-            throw e;
-        }*/
-    }
-
-    public void testAudio3() throws IOException {
-        int STREAM_MUSIC = 3;
-        int ENCODING_PCM_16BIT = 2;
-        int CHANNEL_OUT_MONO = 4;
-        int MODE_STATIC = 0;
-        int MODE_STREAM = 1;
-        //TO USE BELOW CODE, ADD AUDIO TRACK:
-        /*
-        try {
-            WavInfo wi = new WavInfo();
-            InputStream is = getResources().openRawResource(R.raw.beat2_mono);
-            int dataSize = wi.readHeader(is);
-            byte[] data = new byte[dataSize];
-            is.read(data, 0, data.length);
-            is.close();
-            InputStream is2 = getResources().openRawResource(R.raw.beat1_mono);
-            int dataSize2 = wi.readHeader(is2);
-            byte[] data2 = new byte[dataSize];
-            is2.read(data2, 0, data2.length);
-            is2.close();
-            byte[] data3 = new byte[dataSize];
-            Log.d(TAG, "Entering for-loop.");
-            short resMax = 0;
-            short resPrevious=0;
-            for (int i = 0; i < data2.length; i += 2) {
-
-                short buf1a = data[i + 1];
-                short buf2a = data[i];
-                buf1a = (short) ((buf1a & 0xff) << 8);
-                buf2a = (short) (buf2a & 0xff);
-                short buf1b = data2[i + 1];
-                short buf2b = data2[i];
-                buf1b = (short) ((buf1b & 0xff) << 8);
-                buf2b = (short) (buf2b & 0xff);
-
-                short buf1c = (short) (buf1a + buf1b);
-                short buf2c = (short) (buf2a + buf2b);
-
-                short res = (short) (buf1c + buf2c);
-
-                if(res>10000) //Avoid 'normal' cases where amplitude shifts from f.ex. 4 to -2, which we want to keep.
-                {
-                    if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
-                    {
-                        Log.d(TAG,"res:"+res+"");
-                        res = resPrevious;
-                    }
-                }
-                if(res<-10000)
-                {
-                    if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
-                    {
-                        res = resPrevious;
-                    }
-                }
-                resPrevious=res;
-                data3[i] = (byte) res;
-                data3[i + 1] = (byte) (res >> 8);
-            }
-            WavWriter ww = new WavWriter();
-            ww.setDataSize((long) dataSize);
-            ww.setDataChunk(data3);
-            ww.writeToWav("awesome.wav");
-            Log.d(TAG, "Exiting for-loop");
-            Log.d(TAG, "Resmax = " + resMax + "");
-            // AudioTrack at = new AudioTrack(STREAM_MUSIC,44100,CHANNEL_OUT_MONO,ENCODING_PCM_16BIT,dataSize,MODE_STATIC);
-            // at.write(data3,0,data3.length);
-            int frames = data3.length / 2; //2 bytes per frame.
-            Log.d(TAG, "this is data length: " + data3.length);
-            Log.d(TAG, "this is assumed frame number:" + frames);
-            // at.setLoopPoints(0,frames,3);
-            // at.play();
-        } catch (IOException e) {
-            throw e;
-        }*/
-    }
-
-    public void testAudio4() throws IOException {
-        int STREAM_MUSIC = 3;
-        int ENCODING_PCM_16BIT = 2;
-        int CHANNEL_OUT_MONO = 4;
-        int MODE_STATIC = 0;
-        int MODE_STREAM = 1;
-        //TO USE BELOW CODE, ADD AUDIO FILE:
-        /*
-        try {
-            WavInfo wi = new WavInfo();
-            InputStream is = getResources().openRawResource(R.raw.sound1_plus_sound2);
-            int dataSize = wi.readHeader(is);
-            byte[] data = new byte[dataSize];
-            is.read(data, 0, data.length);
-            is.close();
-            ////
-            for (int i = 0; i < data.length; i += 2) {
-
-                short buf1a = data[i + 1];
-                short buf2a = data[i];
-                buf1a = (short) ((buf1a & 0xff) << 8);//? Converting to decimal somehow...
-                buf2a = (short) (buf2a & 0xff);
-                //  short buf3 = (short) buf1a+buf2a;
-            }
-            ////
-            AudioTrack at = new AudioTrack(STREAM_MUSIC, 44100, CHANNEL_OUT_MONO, ENCODING_PCM_16BIT, dataSize, MODE_STATIC);
-            at.write(data, 0, data.length);
-            int frames = data.length / 2; //2 bytes per frame.
-            Log.d(TAG, "this is data length: " + data.length);
-            Log.d(TAG, "this is assumed frame number:" + frames);
-            at.setLoopPoints(0, frames, 3);
-            at.play();
-        } catch (IOException e) {
-            throw e;
-        }*/
-    }
-
-     volatile Runnable feedToBuffer = new Runnable()
+    volatile Runnable feedToBuffer = new Runnable()
     {
         @Override
         public synchronized void run() {
+            //Don't know what this does. But I guess its good:
+            Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+            //Used to check when its time to save wav files for debug:
             int wavCounter=0;
             int wavFileNumber=0;
-            Thread.currentThread().setPriority(Thread.MIN_PRIORITY);//Don't know what this does. But I guess its good.
-            //While we have not stopped the audio, feed the buffer data2 to output.
+            //This buffer is used for storing wav-files for debug.
             //All the buffers should be the same length, using data6 here but hopefully could have used any array:
-            byte[] testBuffer=new byte[data6.length];//Should create an array of zeros, although there seems to be debate about whether the default value is
-            //zero for local variables.
+            byte[] testBuffer=new byte[data6.length];
             int testBufferDataSize=dataSize6;
             ArrayList<Byte> recordingList = new ArrayList<Byte>();
-
-            // byte[] resultingBuffer;
-            //Load testBuffer:
-           /* try {
-                Log.d(TAG + "loading", "Starting to load testbuffer");
-                WavInfo wi = new WavInfo();
-                Log.d(TAG + "loading", "Attempting to get resource");
-                InputStream is = getResources().openRawResource(R.raw.beat1_mono);
-                Log.d(TAG + "loading", "Got resource, attempting header");
-                testBufferDataSize = wi.readHeader(is);
-                Log.d(TAG + "loading", "Read header, attempting to read resource to byte buffer.");
-                testBuffer = new byte[testBufferDataSize];
-                is.read(testBuffer, 0,testBufferDataSize);
-                is.close();
-                Log.d(TAG + "loading", "Finished loading testbuffer");
-            }
-                catch(IOException e ){throw new RuntimeException(e);}*/
-            //
             i = 0;
            // byte[] temp;
             int startWritingPoint=0;
             int counter=0;
+            //ArrayList for storing values for cumulative echo-function:
             ArrayList<Byte> echoBuffer = new ArrayList<Byte>();
             while(!m_stop)
             {
-                Log.d(TAG,"Letting tracks in.");
                 //Should store a files about twice per second.
+                //Uncomment to save wav files for debug:
+                /*
                 if(wavCounter>2000)
                 {
                     WavWriter ww = new WavWriter();
@@ -517,10 +298,15 @@ public class MainActivity extends Activity {
                     ww.writeToWav("noiseDebug"+wavFileNumber+".wav");
                     wavFileNumber++;
                     wavCounter=0;
-                }
+                }*/
+
                 //temp = Arrays.copyOfRange(testBuffer,i,i+bufferLength);
+                //this is where all the byte arrays are written to, and is at the end of this audio
+                //loop passed to AudioTrack:
                 byte[] temp = new byte[bufferLength];
+                //Poorly named temporary byte array used in the loops for adding arrays to the mix below:
                 byte[] resultingBuffer = new byte[temp.length];
+                //Cumulative echo:
                 if(echoing)
                 {
                     if(firstTimeEchoing)
@@ -536,11 +322,7 @@ public class MainActivity extends Activity {
                     }
                     echoCounter+=bufferLength;
                 }
-                //For going in here:
-                    //changedBuffer = true
-                    // Then check for value 1 -16 - each number is one byte array.
-                    //Load correct byte array.
-
+                /*The below section of the code does not yet have very thorough comments:*/
                 if(addBuffer1)
                 {
                     if(i==0)//Letting tracks in at zero.
@@ -2005,7 +1787,7 @@ public class MainActivity extends Activity {
                         {
                             addCounter17 = 0;
                             addBuffer17=false;
-                            numberOfStreams--;
+                            numberOfStreams-=decreaseStreamNumber(echoing2);
                             if(numberOfStreams==0)
                             {
                                 stopStream=true;
@@ -2212,15 +1994,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main5);
         try
         {
-            fillAllBuffers();//Load data7, data8, data9.
-           // bufferLength=data7.length;
+            //Load data7, data8, data9 et.c.
+            fillAllBuffers();
         }
         catch (Exception e){}
-        //Start: applies to activit_main3.xml
+        //Start: applies to activity_main5.xml
         Button record = (Button)findViewById(R.id.buttonRecord);
         Button backward = (Button)findViewById(R.id.buttonBackwards);
         Button echo = (Button)findViewById(R.id.buttonEcho);
@@ -2255,8 +2036,7 @@ public class MainActivity extends Activity {
         //Calculate  screenWidth/4
         //Calculate screenHeight/6
         //Take the smaller of these numbers, this is the square-width.
-        //If it looks weird, add margins.
-        DisplayMetrics metrics = new DisplayMetrics();//Get the dimensions of the screen.
+        DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         int width=metrics.widthPixels;
         int height=metrics.heightPixels;
@@ -2308,7 +2088,6 @@ public class MainActivity extends Activity {
         final Animation animation9 = new AlphaAnimation(1,0);
         final Animation animation10 = new AlphaAnimation(1,0);
         final Animation animation11 = new AlphaAnimation(1,0);
-
         int blinkDuration = 500;
         animation1.setDuration(blinkDuration);
         animation2.setDuration(blinkDuration);
@@ -2321,7 +2100,7 @@ public class MainActivity extends Activity {
         animation9.setDuration(blinkDuration);
         animation10.setDuration(blinkDuration);
         animation11.setDuration(blinkDuration);
-
+        //Animation.REVERSE means it animates back to original position, I think.
         animation1.setInterpolator(new LinearInterpolator());
         animation1.setRepeatMode(Animation.REVERSE);
         animation2.setInterpolator(new LinearInterpolator());
@@ -2357,10 +2136,6 @@ public class MainActivity extends Activity {
                     else if(recording)
                     {
                         //Stop filling ArrayList, write to array and then to WavWriter.
-                        /*WavWriter ww = new WavWriter();
-                        ww.setDataSize((long) bufferSize);
-                        ww.setDataChunk(resultingBuffer);
-                        ww.writeToWav(fileName);*/
                         saveRecording=true;
                         recording=false;
                     }
@@ -2392,14 +2167,14 @@ public class MainActivity extends Activity {
                     {
                         echoing=true;
                         firstTimeEchoing=true;
-                        //add 1 to number of streams.
+                        //add 1 to number of streams. Gotta synch this with the other echo.
                         Log.d(TAG,"Echo on.");
                     }
                     else if(echoing)
                     {
                         addEcho=false;
                         echoing=false;
-                        //remove 1 from number of streams.
+                        //remove 1 from number of streams. Gotta synch this with the other echo.
                         Log.d(TAG,"Echo off.");
                     }
                 } catch (Exception e) {
@@ -2433,7 +2208,7 @@ public class MainActivity extends Activity {
                         addCounterEcho10=0;
                         addCounterEcho11=0;
                         addCounterEcho17=0;
-
+                        numberOfStreams=numberOfStreams/2;
                         //half number of streams.
                         Log.d(TAG,"Echo 2 off.");
                     }
@@ -2448,18 +2223,17 @@ public class MainActivity extends Activity {
                 try {
                     if(!addBuffer1)
                     {
-
                         if (numberOfStreams == 0)
                         {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer1 = true;
                             startStreaming();
                             ((ImageButton) findViewById(R.id.buttonOne)).setImageDrawable(greenButtonLightOn);
                         }
                         else
                         {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer1 = true;
                             ((ImageButton) findViewById(R.id.buttonOne)).setImageDrawable(greenButtonLightOn);
                             int m = outputBuffer.length-i;
@@ -2483,7 +2257,7 @@ public class MainActivity extends Activity {
                             b1.clearAnimation();
                         }
                         addBuffer1=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter1=0;
                         letIn1=false;
                         ((ImageButton) findViewById(R.id.buttonOne)).setImageDrawable(greenButtonLightOff);
@@ -2508,12 +2282,12 @@ public class MainActivity extends Activity {
                     {
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer2 = true;
                             ((ImageButton) findViewById(R.id.buttonTwo)).setImageDrawable(greenButtonLightOn);
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer2 = true;
                             ((ImageButton) findViewById(R.id.buttonTwo)).setImageDrawable(greenButtonLightOn);
                             int m = outputBuffer.length-i;
@@ -2539,7 +2313,7 @@ public class MainActivity extends Activity {
                             b2.clearAnimation();
                         }
                         addBuffer2=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter2=0;
                         letIn2=false;
                         ((ImageButton) findViewById(R.id.buttonTwo)).setImageDrawable(greenButtonLightOff);
@@ -2563,12 +2337,12 @@ public class MainActivity extends Activity {
 
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer3 = true;
                             startStreaming();
                             ((ImageButton) findViewById(R.id.buttonThree)).setImageDrawable(greenButtonLightOn);
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer3 = true;
                             ((ImageButton) findViewById(R.id.buttonThree)).setImageDrawable(greenButtonLightOn);
                             int m = outputBuffer.length-i;
@@ -2593,7 +2367,7 @@ public class MainActivity extends Activity {
                             b3.clearAnimation();
                         }
                         addBuffer3=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter3=0;
                         letIn3=false;
                         ((ImageButton) findViewById(R.id.buttonThree)).setImageDrawable(greenButtonLightOff);
@@ -2618,11 +2392,11 @@ public class MainActivity extends Activity {
 
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer4 = true;
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer4 = true;
                             int m = outputBuffer.length-i;
                             int blinkDuration=500;
@@ -2646,7 +2420,7 @@ public class MainActivity extends Activity {
                             b4.clearAnimation();
                         }
                         addBuffer4=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter4=0;
                         letIn4=false;
 
@@ -2671,11 +2445,11 @@ public class MainActivity extends Activity {
                     {
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer5 = true;
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer5 = true;
                             int m = outputBuffer.length-i;
                             int blinkDuration=500;
@@ -2699,7 +2473,7 @@ public class MainActivity extends Activity {
                             b5.clearAnimation();
                         }
                         addBuffer5=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter5=0;
                         letIn5=false;
                         if(numberOfStreams==0)
@@ -2724,11 +2498,11 @@ public class MainActivity extends Activity {
 
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer6 = true;
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer6 = true;
                             int m = outputBuffer.length-i;
                             int blinkDuration=500;
@@ -2752,7 +2526,7 @@ public class MainActivity extends Activity {
                             b6.clearAnimation();
                         }
                         addBuffer6=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter6=0;
                         letIn6=false;
 
@@ -2778,13 +2552,13 @@ public class MainActivity extends Activity {
 
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer7 = true;
                             startStreaming();
                         }
                         else
                         {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer7 = true;
                             int m = outputBuffer.length-i;
                             int blinkDuration=500;
@@ -2808,7 +2582,7 @@ public class MainActivity extends Activity {
                             b7.clearAnimation();
                         }
                         addBuffer7=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter7=0;
                         letIn7=false;
 
@@ -2834,11 +2608,11 @@ public class MainActivity extends Activity {
 
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer8 = true;
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer8 = true;
                             int m = outputBuffer.length-i;
                             int blinkDuration=500;
@@ -2862,7 +2636,7 @@ public class MainActivity extends Activity {
                             b8.clearAnimation();
                         }
                         addBuffer8=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter8=0;
                         letIn8=false;
                         if(numberOfStreams==0)
@@ -2887,11 +2661,11 @@ public class MainActivity extends Activity {
 
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer9 = true;
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer9 = true;
                             int m = outputBuffer.length-i;
                             int blinkDuration=500;
@@ -2915,7 +2689,7 @@ public class MainActivity extends Activity {
                             b9.clearAnimation();
                         }
                         addBuffer9=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter9=0;
                         letIn9=false;
                         if(numberOfStreams==0)
@@ -2939,11 +2713,11 @@ public class MainActivity extends Activity {
 
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer10 = true;
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer10 = true;
                             int m = outputBuffer.length-i;
                             int blinkDuration=500;
@@ -2967,7 +2741,7 @@ public class MainActivity extends Activity {
                             b10.clearAnimation();
                         }
                         addBuffer10=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter10=0;
                         letIn10=false;
 
@@ -2991,11 +2765,11 @@ public class MainActivity extends Activity {
                     {
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer11 = true;
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             addBuffer11 = true;
                             //Get i, compare to bufferlength. determine how many i's is a second. set duration accordingly.
                             Log.d(TAG,"Clicked b11, this is i: "+i);
@@ -3023,10 +2797,9 @@ public class MainActivity extends Activity {
                             b11.clearAnimation();
                         }
                         addBuffer11=false;
-                        numberOfStreams-=1.0;
+                        numberOfStreams-=decreaseStreamNumber(echoing2);
                         addCounter11=0;
                         letIn11=false;
-
                         if(numberOfStreams==0)
                         {
                             stopStream=true;
@@ -3206,7 +2979,6 @@ public class MainActivity extends Activity {
 
 
         b17.setOnTouchListener(new View.OnTouchListener() {
-
             public boolean onTouch(View v, MotionEvent event) {
                 Log.d("test", "ontouch");
                 switch (event.getAction()) {
@@ -3337,10 +3109,10 @@ public class MainActivity extends Activity {
 
                         if (numberOfStreams == 0) {
                             stopStream=false;
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                             startStreaming();
                         } else {
-                            numberOfStreams += 1.0;
+                            numberOfStreams += increaseStreamNumber(echoing2);
                         }
                         addBuffer17=true;
 
@@ -3348,6 +3120,7 @@ public class MainActivity extends Activity {
                     }
                     else if(addBuffer17)
                     {
+                        //Restart from the beginning.
                         addCounter17=0;
                         /*numberOfStreams-=1.0;
                         addCounter12=0;
@@ -3595,513 +3368,10 @@ public class MainActivity extends Activity {
                 }
             }
         });
-
-        //End: applies to activity_main3.xml
-        //START: applies to activity_main2.xml
-        /*
-        Button b1 = (Button) findViewById(R.id.buttonOne);
-        Button b2 = (Button) findViewById(R.id.buttonTwo);
-        Button b3 = (Button) findViewById(R.id.buttonThree);
-        Button b4 = (Button) findViewById(R.id.buttonFour);
-        Button b5 = (Button) findViewById(R.id.buttonFive);
-        Button b6 = (Button) findViewById(R.id.buttonSix);
-        Button b7 = (Button) findViewById(R.id.buttonSeven);
-        Button b8 = (Button) findViewById(R.id.buttonEight);
-        Button b9 = (Button) findViewById(R.id.buttonNine);
-        Button b10 = (Button) findViewById(R.id.buttonTen);
-        Button b11 = (Button) findViewById(R.id.buttonEleven);
-
-        b1.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer1)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer1 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer1 = true;
-                        }
-                        CharSequence playing = "Beat 1 on. : )";
-                        ((Button) findViewById(R.id.buttonOne)).setText(playing);
-                    }
-                    else if(addBuffer1)
-                    {
-                        addBuffer1=false;
-                        numberOfStreams-=1.0;
-                        addCounter1=0;
-                        letIn1=false;
-                        CharSequence notPlaying = "Beat 1";
-                        ((Button) findViewById(R.id.buttonOne)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }                    }
-                    //final CharSequence text = "Testing 1 2 3";
-                    //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    //toast.show();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer2)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer2 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer2 = true;
-
-                        }
-                        CharSequence playing = "Beat 3 on. : )";
-                        ((Button) findViewById(R.id.buttonTwo)).setText(playing);
-                    }
-                    else if(addBuffer2)
-                    {
-                        addBuffer2=false;
-                        numberOfStreams-=1.0;
-                        addCounter2=0;
-                        letIn2=false;
-                        CharSequence notPlaying = "Beat 3";
-                        ((Button) findViewById(R.id.buttonTwo)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }                    }
-                    //final CharSequence text = "Testing 1 2 3";
-                    //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    //toast.show();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b3.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer3)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer3 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer3 = true;
-                        }
-                        CharSequence playing = "Hihat on. : )";
-                        ((Button) findViewById(R.id.buttonThree)).setText(playing);
-                    }
-                    else if(addBuffer3)
-                    {
-                        addBuffer3=false;
-                        numberOfStreams-=1.0;
-                        addCounter3=0;
-                        letIn3=false;
-                        CharSequence notPlaying = "Hihat";
-                        ((Button) findViewById(R.id.buttonThree)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }
-                    }
-                    //final CharSequence text = "Testing 1 2 3";
-                    //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    //toast.show();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b4.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer4)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer4 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer4 = true;
-                        }
-                        CharSequence playing = "Sub bass 1 on. : )";
-                        ((Button) findViewById(R.id.buttonFour)).setText(playing);
-                    }
-                    else if(addBuffer4)
-                    {
-                        addBuffer4=false;
-                        numberOfStreams-=1.0;
-                        addCounter4=0;
-                        letIn4=false;
-                        CharSequence notPlaying = "Sub Bass 1";
-                        ((Button) findViewById(R.id.buttonFour)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }
-                    }
-                    //final CharSequence text = "Testing 1 2 3";
-                    //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    //toast.show();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b5.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer5)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer5 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer5 = true;
-                        }
-                        CharSequence playing = "Sub bass 2 on. : )";
-                        ((Button) findViewById(R.id.buttonFive)).setText(playing);
-                    }
-                    else if(addBuffer5)
-                    {
-                        addBuffer5=false;
-                        numberOfStreams-=1.0;
-                        addCounter5=0;
-                        letIn5=false;
-                        CharSequence notPlaying = "Sub bass";
-                        ((Button) findViewById(R.id.buttonFive)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }
-                    }
-                    //final CharSequence text = "Testing 1 2 3";
-                    //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    //toast.show();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b6.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer6)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer6 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer6 = true;
-                        }
-                        CharSequence playing = "Synth bass on. : )";
-                        ((Button) findViewById(R.id.buttonSix)).setText(playing);
-                    }
-                    else if(addBuffer6)
-                    {
-                        addBuffer6=false;
-                        numberOfStreams-=1.0;
-                        addCounter6=0;
-                        letIn6=false;
-                        CharSequence notPlaying = "Synth bass";
-                        ((Button) findViewById(R.id.buttonSix)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }                    }
-                    //final CharSequence text = "Testing 1 2 3";
-                    //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    //toast.show();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b7.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer7)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer7 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer7 = true;
-                        }
-                        CharSequence playing = "Boxy Synth on. : )";
-                        ((Button) findViewById(R.id.buttonSeven)).setText(playing);
-                    }
-                    else if(addBuffer7)
-                    {
-                        addBuffer7=false;
-                        numberOfStreams-=1.0;
-                        addCounter7=0;
-                        letIn7=false;
-                        CharSequence notPlaying = "Boxy Synth";
-                        ((Button) findViewById(R.id.buttonSeven)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }                    }
-                    //final CharSequence text = "Testing 1 2 3";
-                    //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    //toast.show();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b8.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer8)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer8 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer8 = true;
-                        }
-                        CharSequence playing = "Bright Strings on. : )";
-                        ((Button) findViewById(R.id.buttonEight)).setText(playing);
-                    }
-                    else if(addBuffer8)
-                    {
-                        addBuffer8=false;
-                        numberOfStreams-=1.0;
-                        addCounter8=0;
-                        letIn8=false;
-                        CharSequence playing = "Bright Strings";
-                        ((Button) findViewById(R.id.buttonEight)).setText(playing);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }                    }
-                    //final CharSequence text = "Testing 1 2 3";
-                    //Toast toast = Toast.makeText(getApplicationContext(),text,Toast.LENGTH_LONG);
-                    //toast.show();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b9.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer9)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer9 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer9 = true;
-                        }
-                        CharSequence playing = "Chords on. : )";
-                        ((Button) findViewById(R.id.buttonNine)).setText(playing);
-                    }
-                    else if(addBuffer9)
-                    {
-                        addBuffer9=false;
-                        numberOfStreams-=1.0;
-                        addCounter9=0;
-                        letIn9=false;
-                        CharSequence notPlaying = "Chords";
-                        ((Button) findViewById(R.id.buttonNine)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-
-        b10.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer10)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer10 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer10 = true;
-                        }
-                        CharSequence playing = "Epic Brass on.:)";
-                        ((Button) findViewById(R.id.buttonTen )).setText(playing);
-                    }
-                    else if(addBuffer10)
-                    {
-                        addBuffer10=false;
-                        numberOfStreams-=1.0;
-                        addCounter10=0;
-                        letIn10=false;
-                        CharSequence notPlaying = "Epic brass";
-                        ((Button) findViewById(R.id.buttonTen)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-
-        b11.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    if(!addBuffer11)
-                    {
-                        if (numberOfStreams == 0) {
-                            numberOfStreams += 1.0;
-                            addBuffer11 = true;
-                            startStreaming();
-                        } else {
-                            numberOfStreams += 1.0;
-                            addBuffer11 = true;
-                        }
-                        CharSequence playing = "Lead 1 on. : )";
-                        ((Button) findViewById(R.id.buttonEleven)).setText(playing);
-                    }
-                    else if(addBuffer11)
-                    {
-                        addBuffer11=false;
-                        numberOfStreams-=1.0;
-                        addCounter11=0;
-                        letIn11=false;
-                        CharSequence notPlaying = "Lead 1";
-                        ((Button) findViewById(R.id.buttonEleven)).setText(notPlaying);
-                        if(numberOfStreams==0)
-                        {
-                            stopStreaming();
-                        }                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        */
-
-        //END APPLIES TO activity_main2.xml
-
-       //START APPLIES TO activity_main.xml:
-       /* b1.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    testAudio();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    testAudio2();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b3.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    testAudio3();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b4.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    testAudio4();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b5.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    startStreaming();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b6.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    stopStreaming();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b7.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                  //  outputBuffer = addBufferToMix(data7,dataSize7,outputBuffer,"plusbuttonseven.wav");
-                   // tempBuffer=outputBuffer;
-                    addBuffer7=true;
-                    Log.d(TAG,"set addBuffer7 to true");
-                   // m_audioTrack.write(outputBuffer,0,outputBuffer.length);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b8.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    removeBuffer7=true;
-                    Log.d(TAG,"set removeBuffer7 to true");
-                   // outputBuffer=removeBufferFromMix(data9,dataSize9,outputBuffer,"minusbuttonnine.wav");
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        b9.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    outputBuffer = addBufferToMix(data9,dataSize9,outputBuffer,"plusbuttonnine.wav");
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        //END APPLIES TO activity_main.xml
-        */
         //Strange automatically added google stuff:
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
-
+    //Weird auto-generated stuff.
     @Override
     public void onStart() {
         super.onStart();
@@ -4120,7 +3390,7 @@ public class MainActivity extends Activity {
         );
        // AppIndex.AppIndexApi.start(client, viewAction);
     }
-
+    //Weird auto-generated stuff. Should consider doing stuff here - freeing resources and maybe pausing music and stuff.
     @Override
     public void onStop() {
         super.onStop();
@@ -4140,6 +3410,7 @@ public class MainActivity extends Activity {
         client.disconnect();
         //
     }
+
     void startStreaming()
     {
         int STREAM_MUSIC = 3;
@@ -4171,15 +3442,6 @@ public class MainActivity extends Activity {
         {
             throw new RuntimeException(e);
         }
-    }
-    void stopStreaming()
-    {
-        m_stop = true;
-        Log.d(TAG,"Calling m_stop");
-        m_audioTrack.stop();
-        Log.d(TAG,"Stopping AudioTrack");
-        m_audioTrack.release();
-        Log.d(TAG,"Releasing AudioTrack.");
     }
     //This should be called in onCreate.
     boolean fillAllBuffers() throws IOException
@@ -4404,225 +3666,6 @@ public class MainActivity extends Activity {
         Log.d(TAG+"fill","Exiting fill all buffers");
         return true;
     }
-    synchronized byte[] addBufferToMix(byte[] buffer,int bufferSize,byte[] currentBuffer,String fileName)
-    {
-        Log.d(TAG+"add","Entering addBufferToMix");
-        short resPrevious=0;
-        byte[] resultingBuffer = new byte[bufferSize];
-
-        for (int i = 0; i < buffer.length; i += 2) {
-
-            short buf1a = currentBuffer[i + 1];
-            short buf2a = currentBuffer[i];
-            buf1a = (short) ((buf1a & 0xff) << 8);
-            buf2a = (short) (buf2a & 0xff);
-            short buf1b = buffer[i + 1];
-            short buf2b = buffer[i];
-            buf1b = (short) ((buf1b & 0xff) << 8);
-            buf2b = (short) (buf2b & 0xff);
-
-            short buf1c = (short) (buf1a + buf1b);
-            short buf2c = (short) (buf2a + buf2b);
-
-            short res = (short) (buf1c + buf2c);
-            float temp = (float)res;
-            float temp2 = temp/2;
-            res = (short)temp2;
-
-            if(res>10000) //Avoid 'normal' cases where amplitude shifts from f.ex. 4 to -2, which we want to keep.
-            {
-                if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
-                {
-                    Log.d(TAG,"res:"+res+"");
-                    res = resPrevious;
-                }
-            }
-            if(res<-10000)
-            {
-                if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
-                {
-                    res = resPrevious;
-                }
-            }
-            resPrevious=res;
-            resultingBuffer[i] = (byte) res;
-            resultingBuffer[i + 1] = (byte) (res >> 8);
-        }
-        WavWriter ww = new WavWriter();
-        ww.setDataSize((long) bufferSize);
-        ww.setDataChunk(resultingBuffer);
-        ww.writeToWav(fileName);
-        Log.d(TAG+"add","Exiting addBufferToMix");
-        return resultingBuffer;
-    }
-    byte[] removeBufferFromMix(byte[] buffer,int bufferSize,byte[] currentBuffer,String fileName)
-    {
-        short resPrevious=0;
-        byte[] resultingBuffer = new byte[bufferSize];
-        for (int i = 0; i < buffer.length; i += 2) {
-
-            short buf1a = currentBuffer[i + 1];
-            short buf2a = currentBuffer[i];
-            buf1a = (short) ((buf1a & 0xff) << 8);
-            buf2a = (short) (buf2a & 0xff);
-            short buf1b = buffer[i + 1];
-            short buf2b = buffer[i];
-            buf1b = (short) ((buf1b & 0xff) << 8);
-            buf2b = (short) (buf2b & 0xff);
-
-            short buf1c = (short) (buf1a - buf1b);
-            short buf2c = (short) (buf2a - buf2b);
-
-            short res = (short) (buf1c + buf2c);
-
-            if(res>10000) //Avoid 'normal' cases where amplitude shifts from f.ex. 4 to -2, which we want to keep.
-            {
-                if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
-                {
-                    Log.d(TAG,"res:"+res+"");
-                    res = resPrevious;
-                }
-            }
-            if(res<-10000)
-            {
-                if((res*resPrevious)<0) //If the sign has changed suddenly for a large number, use the previous number.
-                {
-                    res = resPrevious;
-                }
-            }
-            resPrevious=res;
-            resultingBuffer[i] = (byte) res;
-            resultingBuffer[i + 1] = (byte) (res >> 8);
-        }
-        WavWriter ww = new WavWriter();
-        ww.setDataSize((long) bufferSize);
-        ww.setDataChunk(resultingBuffer);
-        ww.writeToWav(fileName);
-        byte[] returnBuffer = data2;//
-        return returnBuffer;
-    }
-    public synchronized byte[] getBufferUpdate()
-    {
-        return tempBuffer;
-    }
-    //Adding array data7 at the correct place
-    //increment until you have changed everything back to where
-    //you started. Then set false.
-    public synchronized byte[] addBufferToStream(byte[] newBuffer,byte[] currentBuffer,int i) {
-        //i = position in the array that is next to be fed to the outputbuffer.
-        //i + the 99 next elements will be written to the Audiobuffer.
-        Log.d(TAG, "Entered addBufferToStream.");
-        short resPrevious = 0;
-        byte[] subBuffer = Arrays.copyOfRange(newBuffer, i, i + 100);
-        byte[] resultingBuffer = new byte[subBuffer.length];
-
-        for (int m = 0; m < subBuffer.length; m += 2) {
-            //  Log.d(TAG,"this is index: "+m);
-            short buf1a = currentBuffer[m + 1];
-            short buf2a = currentBuffer[m];
-            buf1a = (short) ((buf1a & 0xff) << 8);
-            buf2a = (short) (buf2a & 0xff);
-            short buf1b = subBuffer[m + 1];
-            short buf2b = subBuffer[m];
-            buf1b = (short) ((buf1b & 0xff) << 8);
-            buf2b = (short) (buf2b & 0xff);
-
-            short buf1c = (short) (buf1a + buf1b);
-            short buf2c = (short) (buf2a + buf2b);
-
-            short res = (short) (buf1c + buf2c);
-            float temporary = (float) res;
-            float temp2 = temporary / 2;
-            res = (short) temp2;
-
-            if (res > 10000) //Avoid 'normal' cases where amplitude shifts from f.ex. 4 to -2, which we want to keep.
-            {
-                if ((res * resPrevious) < 0) //If the sign has changed suddenly for a large number, use the previous number.
-                {
-                    Log.d(TAG, "res:" + res + "");
-                    res = resPrevious;
-                }
-            }
-            if (res < -10000) {
-                if ((res * resPrevious) < 0) //If the sign has changed suddenly for a large number, use the previous number.
-                {
-                    res = resPrevious;
-                }
-            }
-            resPrevious = res;
-            resultingBuffer[m] = (byte) res;
-            resultingBuffer[m + 1] = (byte) (res >> 8);
-            //counter += 2;
-        }
-        // temp=resultingBuffer;
-        //Log.d(TAG, "temp just got changed.");
-        //
-        //outputBuffer=addBufferToMix(data7,dataSize7,outputBuffer,"thisFile");
-
-        Log.d(TAG,"Exiting addBufferToStream. ");
-        return resultingBuffer;
-    }
-    //Test for using a method outside the thread.
-    public synchronized byte[] addByteArray(byte[] dataBuffer, byte[] temp,int i)
-    {
-        short resPrevious=0;
-        byte[] subBuffer2 = Arrays.copyOfRange(data7,i,i+bufferLength);
-        //Log.d(TAG,"this is testBuffer.length: "+testBuffer.length);
-        byte[] temporaryBufferWithHalfAmplitude = new byte[bufferLength];
-        byte[] temporaryOtherBufferWithHalfAmplitude = new byte[bufferLength];
-        byte[] resultingBuffer = new byte[bufferLength];
-        for (int m = 0; m < subBuffer2.length; m += 2)
-        {
-            short buf1a = temp[m + 1];
-            short buf2a = temp[m];
-            buf1a = (short) ((buf1a & 0xff) << 8);
-            buf2a = (short) (buf2a & 0xff);
-            short buf1b = subBuffer2[m + 1];
-            short buf2b = subBuffer2[m];
-            buf1b = (short) ((buf1b & 0xff) << 8);
-            buf2b = (short) (buf2b & 0xff);
-            //Dividing amplitude by half and writing to temporary buffer.
-            short dude = (short) (buf1a + buf2a);
-            float fdude = (float) (dude / 2.0);
-            dude = (short) fdude;
-            temporaryBufferWithHalfAmplitude[m] = (byte) dude;
-            temporaryBufferWithHalfAmplitude[m + 1] = (byte) (dude >> 8);
-            //Dividing amplitude by half and writing to temporary other buffer.
-            short dudette = (short) (buf1b + buf2b);
-            float fdudette = (float) (dudette / 2.0);
-            dudette = (short) fdudette;
-            temporaryOtherBufferWithHalfAmplitude[m] = (byte) dudette;
-            temporaryOtherBufferWithHalfAmplitude[m + 1] = (byte) (dudette >> 8);
-            //Getting values from temporary buffer.
-            buf1a = temporaryBufferWithHalfAmplitude[m + 1];
-            buf2a = temporaryBufferWithHalfAmplitude[m];
-            buf1a = (short) ((buf1a & 0xff) << 8);
-            buf2a = (short) (buf2a & 0xff);
-            //Getting values from temporary other buffer.
-            buf1b = temporaryOtherBufferWithHalfAmplitude[m + 1];
-            buf2b = temporaryOtherBufferWithHalfAmplitude[m];
-            buf1b = (short) ((buf1b & 0xff) << 8);
-            buf2b = (short) (buf2b & 0xff);
-            //Adding buffers.
-            short buf1c = (short) (buf1a + buf1b);
-            short buf2c = (short) (buf2a + buf2b);
-            short res = (short) (buf1c + buf2c);
-            //write to return buffer.
-            resultingBuffer[m] = (byte) res;
-            resultingBuffer[m + 1] = (byte) (res >> 8);
-            addCounter7 += 2;
-        }
-            return resultingBuffer;
-    }
-    synchronized void setOn11()
-    {
-        b11.setImageDrawable(purpleButtonLightOn);
-       // b.setImageDrawable("something");
-    }
-    synchronized void setOff11()
-    {
-        b11.setImageDrawable(purpleButtonLightOff);
-    }
     byte[] rotateArray(byte[] array,int delayLength)
     {
         byte[] temp = new byte[array.length];
@@ -4637,5 +3680,32 @@ public class MainActivity extends Activity {
             array[m]=temp[i];
         }
         return array;
+    }
+    //Call when adding a new byte array to the mix.
+    int increaseStreamNumber(boolean echo2)
+    {
+        int increaseByThisMany=0;
+        if(echo2)
+        {
+            increaseByThisMany=2;
+        }
+        else
+        {
+            increaseByThisMany=1;
+        }
+        return increaseByThisMany;
+    }
+    int decreaseStreamNumber(boolean echo2)
+    {
+        int decreaseByThisMany=0;
+        if(echo2)
+        {
+            decreaseByThisMany=2;
+        }
+        else
+        {
+            decreaseByThisMany=1;
+        }
+        return decreaseByThisMany;
     }
 }
